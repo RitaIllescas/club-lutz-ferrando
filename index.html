@@ -769,12 +769,13 @@ function renderHome(s,nivel,nivelLabel){
   document.getElementById('hero-prog-pct').textContent=progFill+'%';
   document.getElementById('hero-prog-fill').style.width=progFill+'%';
   document.getElementById('hero-urgency').textContent=getUrgency(s.pts,nivel);
+  if(document.getElementById('promos-container')) document.getElementById('promos-container').innerHTML='';
   renderFlashPromos();
   // show cupon card if active
   const qcCupon=document.getElementById('qc-cupon');
   if(qcCupon) qcCupon.style.display=(s.cuponBienvenida&&!s.cuponUsado)?'flex':'none';
   const discSvg='<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01"/></svg>';
-  document.getElementById('promos-container').innerHTML=PROMOS.filter(p=>p.niveles&&p.niveles.includes(nivel)).map(p=>`
+  if(document.getElementById('promos-container')) document.getElementById('promos-container').innerHTML=PROMOS.filter(p=>p.niveles&&p.niveles.includes(nivel)).map(p=>`
     <div class="promo-card">
       <div class="promo-header">
         <div class="promo-ico benef-ico ${p.ico}">${discSvg}</div>
