@@ -772,7 +772,7 @@ function renderHome(s,nivel,nivelLabel){
   const qcCupon=document.getElementById('qc-cupon');
   if(qcCupon) qcCupon.style.display=(s.cuponBienvenida&&!s.cuponUsado)?'flex':'none';
   const discSvg='<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01"/></svg>';
-  document.getElementById('promos-container').innerHTML=PROMOS.filter(p=>!p.niveles||p.niveles.includes(nivel)).map(p=>`
+  document.getElementById('promos-container').innerHTML=PROMOS.filter(p=>p.niveles&&p.niveles.includes(nivel)).map(p=>`
     <div class="promo-card">
       <div class="promo-header">
         <div class="promo-ico benef-ico ${p.ico}">${discSvg}</div>
