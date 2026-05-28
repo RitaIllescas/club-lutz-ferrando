@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Panel Admin — Lutz Ferrando</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--brand:#009180;--brand-dark:#006b5f;--brand-light:#e0f5f2;--gold:#c9923a;--gold-bg:#fef3c7;--black:#111;--white:#fff;--gray:#6b7280;--gray-light:#f3f4f6;--border:#e5e7eb;--text:#111827;--text-muted:#6b7280;--success:#16a34a;--danger:#dc2626;--font:'Futura','Century Gothic','Trebuchet MS','Nunito',sans-serif;--radius:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:#f0f4f8;color:var(--text);}
+.topbar{background:var(--brand-dark);padding:13px 24px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-brand{color:#fff;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.topbar-brand span{display:block;font-size:9px;color:rgba(255,255,255,0.6);font-weight:300;letter-spacing:2px;margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-user{font-size:12px;color:rgba(255,255,255,0.7);}
+.btn-sm{padding:6px 14px;border:none;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;}
+.btn-danger{background:rgba(220,38,38,0.15);color:#fca5a5;}
+.main{max-width:1200px;margin:0 auto;padding:22px 20px;}
+.page-title{font-size:20px;font-weight:700;margin-bottom:2px;}
+.page-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+@media(max-width:700px){.stats-grid{grid-template-columns:1fr 1fr;}}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-top:4px solid var(--border);}
+.stat-card.total{border-color:var(--brand);}
+.stat-card.basico{border-color:#009180;}
+.stat-card.gold{border-color:#c9923a;}
+.stat-card.black{border-color:#111;}
+.stat-card .val{font-size:26px;font-weight:700;}
+.stat-card.total .val{color:var(--brand);}
+.stat-card.basico .val{color:#006b5f;}
+.stat-card.gold .val{color:#a07820;}
+.stat-card.black .val{color:#111;}
+.stat-card .lbl{font-size:10px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--gray-light);border-radius:10px;padding:4px;margin-bottom:18px;}
+.tab{flex:1;padding:9px;border:none;background:transparent;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
+.tab.active{background:var(--white);color:var(--brand-dark);box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:700px){.grid{grid-template-columns:1fr;}}
+.card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+.card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:14px;}
+
+.form-group{margin-bottom:12px;}
+.form-group label{font-size:10px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+.form-group input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s;}
+.form-group input:focus{border-color:var(--brand);}
+
+.socio-box{background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:13px;margin-bottom:12px;display:none;}
+.socio-box-top{display:flex;align-items:center;gap:11px;}
+.socio-avatar{width:42px;height:42px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;}
+.socio-name{font-size:14px;font-weight:700;}
+.socio-meta{font-size:11px;color:var(--gray);margin-top:2px;}
+.nivel-pill{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-left:auto;}
+.pill-basico{background:var(--brand-light);color:#006b5f;}
+.pill-gold{background:var(--gold-bg);color:#7a5c10;}
+.pill-black{background:#111;color:#fff;}
+
+.error-box{background:#fef2f2;border:1.5px solid #dc2626;border-radius:9px;padding:10px;margin-bottom:12px;font-size:12px;color:#dc2626;display:none;}
+.pts-preview{background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;display:none;}
+.pts-preview .pts-num{font-size:36px;font-weight:700;color:#15803d;}
+.pts-preview .pts-label{font-size:11px;color:var(--gray);margin-top:2px;}
+.btn-main{width:100%;padding:12px;border:none;border-radius:9px;background:var(--brand-dark);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s;display:none;}
+.btn-main:hover{background:var(--brand);}
+.btn-canje{background:#b45309;}
+.btn-canje:hover{background:#92400e;}
+.success-box{background:#dcfce7;border:1.5px solid #16a34a;border-radius:10px;padding:14px;text-align:center;display:none;margin-top:10px;}
+.success-box .check{font-size:24px;margin-bottom:4px;}
+.success-box .msg{font-size:13px;font-weight:700;color:#15803d;}
+.success-box .sub{font-size:11px;color:#166534;margin-top:3px;}
+
+/* SOCIO DETALLE */
+.socio-detalle{display:none;}
+.detalle-header{background:var(--brand-dark);border-radius:10px;padding:16px;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:14px;}
+.detalle-avatar{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;}
+.detalle-info .name{font-size:16px;font-weight:700;}
+.detalle-info .meta{font-size:11px;opacity:0.7;margin-top:2px;}
+.detalle-tabs{display:flex;gap:4px;background:var(--gray-light);border-radius:8px;padding:3px;margin-bottom:12px;}
+.detalle-tab{flex:1;padding:7px;border:none;background:transparent;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:700;color:var(--text-muted);cursor:pointer;}
+.detalle-tab.active{background:var(--white);color:var(--brand-dark);}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.info-item{background:var(--gray-light);border-radius:8px;padding:10px;}
+.info-item .lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.info-item .val{font-size:13px;font-weight:700;margin-top:2px;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:9px 11px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);}
+td{padding:10px 11px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f9fafb;cursor:pointer;}
+.badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-basico{background:var(--brand-light);color:#006b5f;}
+.badge-gold{background:var(--gold-bg);color:#7a5c10;}
+.badge-black{background:#111;color:#fff;}
+
+/* MOV LIST */
+.mov-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.mov-row:last-child{border-bottom:none;}
+.mov-ico{width:30px;height:30px;border-radius:50%;background:var(--gray-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mov-ico svg{width:14px;height:14px;color:var(--text-muted);}
+.mov-info .title{font-size:12px;font-weight:600;}
+.mov-info .sub{font-size:10px;color:var(--text-muted);margin-top:1px;}
+.mov-pts{font-size:13px;font-weight:700;margin-left:auto;white-space:nowrap;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#006b5f,#009180);}
+.login-card{background:#fff;border-radius:16px;padding:32px;width:100%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,0.15);}
+.login-logo{text-align:center;margin-bottom:20px;}
+.login-logo .brand{font-size:16px;font-weight:700;letter-spacing:2px;color:var(--brand-dark);text-transform:uppercase;}
+.login-logo .sub{font-size:10px;color:var(--gray);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<div id="panel-login" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo"><div class="brand">LUTZ FERRANDO</div><div class="sub">Panel Administración</div></div>
+    <div class="form-group"><label>Email</label><input type="email" id="admin-email" placeholder="ventas@sucursal.com"/></div>
+    <div class="form-group"><label>Contraseña</label><input type="password" id="admin-pass" placeholder="••••••••"/>
+      <div style="font-size:11px;color:#dc2626;margin-top:3px;display:none" id="admin-login-err">Credenciales incorrectas.</div></div>
+    <button class="btn-main" style="display:block" onclick="adminLogin()">Ingresar</button>
+  </div>
+</div>
+
+<div id="panel-main" style="display:none">
+  <div class="topbar">
+    <div class="topbar-brand">LUTZ FERRANDO <span>Panel de Administración</span></div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="admin-user-email">-</span>
+      <button class="btn-sm btn-danger" onclick="adminLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="page-title">Panel de caja</div>
+    <div class="page-sub">Gestioná socios, puntos y canjes</div>
+
+    <div class="stats-grid">
+      <div class="stat-card total"><div class="val" id="stat-total">-</div><div class="lbl">Socios totales</div></div>
+      <div class="stat-card basico"><div class="val" id="stat-basico">-</div><div class="lbl">Nivel Básico</div></div>
+      <div class="stat-card gold"><div class="val" id="stat-gold">-</div><div class="lbl">Nivel Gold</div></div>
+      <div class="stat-card black"><div class="val" id="stat-black">-</div><div class="lbl">Nivel Black</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('cargar')">Cargar puntos</button>
+      <button class="tab" onclick="showTab('canje')">Registrar canje</button>
+      <button class="tab" onclick="showTab('socios')">Ver socios</button>
+      <button class="tab" onclick="showTab('cupones')">Validar cupón</button>
+      <button class="tab" onclick="showTab('canjes')">Validar canje</button>
+      <button class="tab" onclick="showTab('flash')">Promos flash</button>
+    </div>
+
+    <!-- CARGAR PUNTOS -->
+    <div id="tab-cargar">
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Buscar socio</div>
+          <div class="form-group"><label>DNI o nombre</label><input type="text" id="buscar-input" placeholder="Ej: 25123456 o Juan Pérez" oninput="buscarSocio()"/></div>
+          <div id="buscar-socio-box" class="socio-box"></div>
+          <div id="buscar-error" class="error-box">No se encontró ningún socio.</div>
+          <div class="form-group"><label>Monto de la compra ($)</label><input type="number" id="monto-input" placeholder="Ej: 25000" min="0" oninput="calcularPuntos()"/></div>
+          <div id="pts-preview-box" class="pts-preview"><div class="pts-num" id="pts-preview-num">+0</div><div class="pts-label">puntos a sumar · 1 pto cada $1.000</div></div>
+          <button class="btn-main" id="btn-confirmar" onclick="confirmarPuntos()">Confirmar y sumar puntos</button>
+          <div class="success-box" id="success-box"><div class="check">✓</div><div class="msg" id="success-msg">-</div><div class="sub" id="success-sub">-</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Escanear QR</div>
+          <div style="background:var(--gray-light);border-radius:9px;padding:16px;text-align:center;margin-bottom:12px;">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="width:36px;height:36px;color:var(--gray);margin:0 auto 6px;display:block"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/></svg>
+            <p style="font-size:12px;color:var(--text-muted)">Pegá el contenido del QR escaneado</p>
+            <input style="width:100%;margin-top:10px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;outline:none;" id="qr-input" placeholder="LF-25123456|uid..." oninput="procesarQR()"/>
+          </div>
+          <div id="qr-socio-box" class="socio-box"></div>
+          <div id="qr-error" class="error-box"></div>
+          <div class="form-group"><label>Monto ($)</label><input type="number" id="qr-monto" placeholder="Ej: 25000" min="0" oninput="calcularPuntosQR()"/></div>
+          <div id="qr-pts-preview" class="pts-preview"><div class="pts-num" id="qr-pts-num">+0</div><div class="pts-label">puntos a sumar</div></div>
+          <button class="btn-main" id="qr-btn-confirmar" onclick="confirmarPuntosQR()">Confirmar y sumar puntos</button>
+          <div class="success-box" id="qr-success-box"><div class="check">✓</div><div class="msg" id="qr-success-msg">-</div><div class="sub" id="qr-success-sub">-</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CANJE -->
+    <div id="tab-canje" style="display:none">
+      <div class="card" style="max-width:500px">
+        <div class="card-title">Registrar canje de puntos</div>
+        <div class="form-group"><label>DNI del socio</label><input type="text" id="canje-dni" placeholder="25123456" oninput="buscarSocioCanje()"/></div>
+        <div id="canje-socio-box" class="socio-box"></div>
+        <div id="canje-error" class="error-box"></div>
+        <div class="form-group"><label>Puntos a descontar</label><input type="number" id="canje-pts" placeholder="Ej: 500" min="0" oninput="calcularCanje()"/></div>
+        <div id="canje-preview" style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;padding:13px;text-align:center;margin-bottom:12px;display:none">
+          <div style="font-size:28px;font-weight:700;color:#d97706" id="canje-preview-pts">-500 pts</div>
+          <div style="font-size:12px;color:#92400e;margin-top:3px" id="canje-preview-desc">Equivale a X% de descuento</div>
+        </div>
+        <button class="btn-main btn-canje" id="btn-canje-confirmar" onclick="confirmarCanje()">Registrar canje</button>
+        <div class="success-box" id="canje-success-box"><div class="check">✓</div><div class="msg" id="canje-success-msg">-</div><div class="sub" id="canje-success-sub">-</div></div>
+      </div>
+    </div>
+
+
+    <!-- CUPONES -->
+    <div id="tab-cupones" style="display:none">
+      <div class="card" style="max-width:500px">
+        <div class="card-title">Validar cupón de descuento</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Ingresá el código del cupón que muestra el socio (o escaneá el QR y pegá el contenido).</p>
+        <div class="form-group">
+          <label>Código del cupón</label>
+          <input type="text" id="cupon-input" placeholder="CLF-XXXXXXXX o contenido del QR" oninput="buscarCupon()" style="text-transform:uppercase"/>
+        </div>
+        <div id="cupon-result-box" style="display:none;border-radius:10px;padding:16px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0" id="cupon-avatar">-</div>
+            <div>
+              <div style="font-size:15px;font-weight:700" id="cupon-nombre">-</div>
+              <div style="font-size:12px;color:var(--gray)" id="cupon-meta">-</div>
+            </div>
+          </div>
+          <div style="text-align:center;padding:14px;border-radius:10px;margin-bottom:12px" id="cupon-descuento-box">
+            <div style="font-size:32px;font-weight:700" id="cupon-descuento-val">10%</div>
+            <div style="font-size:13px;margin-top:3px" id="cupon-descuento-desc">-</div>
+          </div>
+          <button class="btn-main" id="btn-usar-cupon" onclick="usarCupon()" style="display:none">Marcar cupón como usado</button>
+        </div>
+        <div id="cupon-error-box" class="error-box"></div>
+        <div class="success-box" id="cupon-success-box">
+          <div class="check">✓</div>
+          <div class="msg" id="cupon-success-msg">Cupón validado correctamente</div>
+          <div class="sub">Aplicá el descuento en Optigest manualmente</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- VALIDAR CANJE -->
+    <div id="tab-canjes" style="display:none">
+      <div class="card" style="max-width:500px">
+        <div class="card-title">Validar código de canje</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">El socio muestra un código desde su app. Ingresalo acá para validarlo y aplicar el descuento.</p>
+        <div class="form-group">
+          <label>Código de canje</label>
+          <input type="text" id="canje-codigo-input" placeholder="CANJE-XXXXXX" oninput="buscarCanje()" style="text-transform:uppercase;letter-spacing:2px;font-size:16px"/>
+        </div>
+        <div id="canje-result" style="display:none;border-radius:10px;padding:16px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0" id="canje-result-avatar">-</div>
+            <div>
+              <div style="font-size:15px;font-weight:700" id="canje-result-nombre">-</div>
+              <div style="font-size:12px;color:var(--gray)" id="canje-result-meta">-</div>
+            </div>
+          </div>
+          <div style="text-align:center;padding:16px;border-radius:10px;margin-bottom:12px" id="canje-descuento-box">
+            <div style="font-size:32px;font-weight:700" id="canje-result-desc">-</div>
+            <div style="font-size:12px;margin-top:4px" id="canje-result-venc">-</div>
+          </div>
+          <button class="btn-main" id="btn-usar-canje" onclick="usarCanje()" style="display:none">✓ Aplicar descuento y marcar como usado</button>
+        </div>
+        <div id="canje-error-result" class="error-box"></div>
+        <div class="success-box" id="canje-success-result">
+          <div class="check">✓</div>
+          <div class="msg" id="canje-success-result-msg">Canje aplicado</div>
+          <div class="sub">Aplicá el descuento en Optigest manualmente</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMOS FLASH -->
+    <div id="tab-flash" style="display:none">
+      <div class="card">
+        <div class="card-title">Cargar promo flash</div>
+        <div class="form-group"><label>Título</label><input type="text" id="flash-titulo" placeholder="Ej: Ray-Ban 30% OFF en efectivo"/></div>
+        <div class="form-group"><label>Descripción</label><input type="text" id="flash-sub" placeholder="Ej: Solo por esta semana"/></div>
+        <div class="form-group"><label>Badge (texto corto)</label><input type="text" id="flash-badge" placeholder="Ej: 30% OFF"/></div>
+        <div class="form-group"><label>URL de imagen (opcional)</label><input type="url" id="flash-imagen" placeholder="https://..."/></div>
+        <div class="form-group"><label>Válido hasta</label><input type="date" id="flash-venc"/></div>
+        <button class="btn-main" style="display:block;margin-bottom:20px" onclick="cargarFlash()">Publicar promo flash</button>
+        <div class="success-box" id="flash-success" style="margin-bottom:20px"><div class="check">✓</div><div class="msg">Promo publicada correctamente</div></div>
+        <div class="card-title" style="margin-top:8px">Promos activas</div>
+        <div id="flash-lista"></div>
+      </div>
+    </div>
+
+    <!-- SOCIOS -->
+    <div id="tab-socios" style="display:none">
+      <!-- LISTA -->
+      <div id="socios-lista">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="card-title" style="margin:0">Listado de socios</div>
+            <input type="text" id="tabla-search" placeholder="Buscar..." oninput="filtrarTabla()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;outline:none;width:200px"/>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nº Afiliado</th><th>Nombre</th><th>DNI</th><th>WhatsApp</th><th>Nivel</th><th>Puntos</th><th>Producto</th><th>Desde</th></tr></thead>
+              <tbody id="socios-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- DETALLE SOCIO -->
+      <div id="socio-detalle" class="socio-detalle">
+        <div style="margin-bottom:14px"><button onclick="volverLista()" style="background:none;border:none;cursor:pointer;color:var(--brand-dark);font-family:var(--font);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M15 18l-6-6 6-6"/></svg>Volver al listado</button></div>
+        <div class="detalle-header">
+          <div class="detalle-avatar" id="det-avatar">-</div>
+          <div class="detalle-info">
+            <div class="name" id="det-name">-</div>
+            <div class="meta" id="det-meta">-</div>
+          </div>
+          <span class="nivel-pill" id="det-nivel-pill" style="margin-left:auto">-</span>
+        </div>
+        <div class="detalle-tabs">
+          <button class="detalle-tab active" onclick="showDetTab('info')">Información</button>
+          <button class="detalle-tab" onclick="showDetTab('movimientos')">Movimientos</button>
+        </div>
+        <div id="det-tab-info">
+          <div class="info-grid">
+            <div class="info-item"><div class="lbl">Nº Afiliado</div><div class="val" id="det-id">-</div></div>
+            <div class="info-item"><div class="lbl">DNI</div><div class="val" id="det-dni">-</div></div>
+            <div class="info-item"><div class="lbl">Fecha de nac.</div><div class="val" id="det-fnac">-</div></div>
+            <div class="info-item"><div class="lbl">Socio desde</div><div class="val" id="det-joined">-</div></div>
+            <div class="info-item"><div class="lbl">Puntos</div><div class="val" id="det-pts" style="color:var(--brand)">-</div></div>
+            <div class="info-item"><div class="lbl">Producto</div><div class="val" id="det-producto">-</div></div>
+          </div>
+          <div id="det-cumple-box" style="display:none;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">
+            <div style="font-size:22px;margin-bottom:6px">🎂</div>
+            <div style="font-size:14px;font-weight:700;color:#6d28d9;margin-bottom:4px">¡Hoy es su cumpleaños!</div>
+            <div style="font-size:12px;color:#7c3aed;margin-bottom:4px">Cupón de descuento activo:</div>
+            <div style="font-size:14px;font-weight:700;color:#6d28d9;letter-spacing:1px" id="det-cumple-codigo">-</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:3px" id="det-cumple-venc">-</div>
+            <div style="margin-top:8px;font-size:11px;color:#6d28d9;background:rgba(124,58,237,0.1);border-radius:6px;padding:6px">10% OFF · Validalo en la solapa "Validar cupón"</div>
+          </div>
+          <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;padding:14px;margin-top:4px">
+            <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Editar datos de contacto</div>
+            <div class="form-group"><label>Email</label><input type="email" id="det-email-edit" placeholder="email@ejemplo.com" style="text-transform:none"/></div>
+            <div class="form-group" style="margin-bottom:10px"><label>WhatsApp</label><input type="tel" id="det-wsp-edit" placeholder="+54 260 4000000"/></div>
+            <div style="font-size:11px;color:#92400e;margin-bottom:8px">Solo se puede modificar email y WhatsApp.</div>
+            <button onclick="guardarEdicionAdmin()" style="padding:9px 18px;border:none;border-radius:8px;background:#006b5f;color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">Guardar cambios</button>
+            <span id="det-edit-ok" style="display:none;margin-left:10px;font-size:12px;color:#15803d;font-weight:600">✓ Guardado</span>
+          </div>
+        </div>
+        <div id="det-tab-movimientos" style="display:none">
+          <div class="card">
+            <div id="det-movs-list"><div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px">Cargando...</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, addDoc, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const app = initializeApp({apiKey:"AIzaSyAYyw1ZaeiIxPHD8Oj-YzZOaqKcT8zIo0Y",authDomain:"club-lutz-ferrando.firebaseapp.com",projectId:"club-lutz-ferrando",storageBucket:"club-lutz-ferrando.firebasestorage.app",messagingSenderId:"1002982283684",appId:"1:1002982283684:web:74ecbbf6b1f063c72d0931"});
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let todosSocios=[], socioSeleccionado=null, socioQR=null, socioCanje=null, socioDetalle=null, adminEmail='';
+
+const CANJES=[{pts:500,desc:'10% OFF'},{pts:1000,desc:'20% OFF'},{pts:2000,desc:'30% OFF'},{pts:5000,desc:'50% OFF'}];
+const PROD_LABELS={monofocales:'Monofocales',bifocales:'Bifocales',ocupacionales:'Ocupacionales',multifocales:'Multifocales',contacto:'Lentes contacto',audifonos:'Audífonos',sol:'Anteojos sol',varios:'Varios'};
+
+function getNivel(pts){if(pts>=10000)return'Black';if(pts>=2000)return'Gold';return'Básico';}
+function getNivelClass(pts){if(pts>=10000)return'pill-black badge-black';if(pts>=2000)return'pill-gold badge-gold';return'pill-basico badge-basico';}
+function getInitials(name){return(name||'').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();}
+function getSucursal(email){if(email.includes('malargue'))return'Sucursal Malargüe';if(email.includes('sucursal1')||email.includes('central'))return'Sucursal San Rafael 1';if(email.includes('sucursal2'))return'Sucursal San Rafael 2';return'Sucursal';}
+
+onAuthStateChanged(auth,user=>{
+  if(user){
+    adminEmail=user.email;
+    document.getElementById('panel-login').style.display='none';
+    document.getElementById('panel-main').style.display='block';
+    document.getElementById('admin-user-email').textContent=getSucursal(user.email);
+    cargarSocios();
+  }else{
+    document.getElementById('panel-login').style.display='flex';
+    document.getElementById('panel-main').style.display='none';
+  }
+});
+
+window.adminLogin=async function(){
+  const email=document.getElementById('admin-email').value.trim();
+  const pass=document.getElementById('admin-pass').value;
+  const err=document.getElementById('admin-login-err');
+  try{await signInWithEmailAndPassword(auth,email,pass);err.style.display='none';}
+  catch(e){err.style.display='block';}
+};
+window.adminLogout=async function(){await signOut(auth);};
+
+async function cargarSocios(){
+  const snap=await getDocs(collection(db,'socios'));
+  todosSocios=[];
+  snap.forEach(d=>todosSocios.push(d.data()));
+  renderStats();
+  renderTabla(todosSocios);
+}
+
+function renderStats(){
+  document.getElementById('stat-total').textContent=todosSocios.length;
+  document.getElementById('stat-basico').textContent=todosSocios.filter(s=>getNivel(s.pts||0)==='Básico').length;
+  document.getElementById('stat-gold').textContent=todosSocios.filter(s=>getNivel(s.pts||0)==='Gold').length;
+  document.getElementById('stat-black').textContent=todosSocios.filter(s=>getNivel(s.pts||0)==='Black').length;
+}
+
+function renderTabla(socios){
+  const tbody=document.getElementById('socios-tbody');
+  if(!socios.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px">Sin socios</td></tr>';return;}
+  const hoyT=new Date();
+  tbody.innerHTML=socios.map(s=>{
+    const fnacT=s.fnac?new Date(s.fnac):null;
+    const esCumpleT=fnacT&&fnacT.getDate()===hoyT.getDate()&&fnacT.getMonth()===hoyT.getMonth();
+    const rowStyle=esCumpleT?'background:#f5f3ff;':''
+    const cumpleIcon=esCumpleT?' 🎂':'';
+    return `<tr onclick="verDetalle('${s.uid}')" style="${rowStyle}">
+    <td><strong>${s.id||'-'}</strong></td>
+    <td>${s.name||'-'}${cumpleIcon}</td>
+    <td>${s.dni||'-'}</td>
+    <td>${s.wsp||'-'}</td>
+    <td><span class="badge ${getNivelClass(s.pts||0)}">${getNivel(s.pts||0)}</span></td>
+    <td><strong>${(s.pts||0).toLocaleString('es-AR')}</strong></td>
+    <td>${PROD_LABELS[s.producto]||s.producto||'-'}</td>
+    <td>${s.joined||'-'}</td>
+  </tr>`;
+  }).join('');
+}
+
+window.filtrarTabla=function(){
+  const q=document.getElementById('tabla-search').value.toLowerCase();
+  renderTabla(todosSocios.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.dni||'').includes(q)||(s.wsp||'').includes(q)));
+};
+
+// VER DETALLE
+window.verDetalle=async function(uid){
+  socioDetalle=todosSocios.find(s=>s.uid===uid);
+  if(!socioDetalle)return;
+  const s=socioDetalle;
+  document.getElementById('socios-lista').style.display='none';
+  document.getElementById('socio-detalle').style.display='block';
+  document.getElementById('det-avatar').textContent=getInitials(s.name);
+  document.getElementById('det-name').textContent=s.name||'-';
+  // Check birthday
+  const hoyD=new Date(), fnacD=s.fnac?new Date(s.fnac):null;
+  const esCumple=fnacD&&fnacD.getDate()===hoyD.getDate()&&fnacD.getMonth()===hoyD.getMonth();
+  const cumpleBadge=esCumple?'  🎂 ¡HOY ES SU CUMPLEAÑOS!':'';
+  document.getElementById('det-meta').textContent=(s.id||'-')+' · '+(s.pts||0).toLocaleString('es-AR')+' puntos'+cumpleBadge;
+  // Show birthday coupon info
+  const cumpleBox=document.getElementById('det-cumple-box');
+  if(esCumple){
+    cumpleBox.style.display='block';
+    const anio=hoyD.getFullYear();
+    const codigoCumple='CUMPLE-'+(s.dni||'')+'-'+anio;
+    document.getElementById('det-cumple-codigo').textContent=codigoCumple;
+    const venc=new Date(hoyD); venc.setDate(venc.getDate()+30);
+    document.getElementById('det-cumple-venc').textContent='Válido hasta: '+venc.toLocaleDateString('es-AR');
+  } else { cumpleBox.style.display='none'; }
+  document.getElementById('det-nivel-pill').textContent=getNivel(s.pts||0);
+  document.getElementById('det-nivel-pill').className='nivel-pill '+getNivelClass(s.pts||0).split(' ')[0];
+  document.getElementById('det-id').textContent=s.id||'-';
+  document.getElementById('det-dni').textContent=s.dni||'-';
+  document.getElementById('det-email').textContent=s.email||'-';
+  document.getElementById('det-wsp').textContent=s.wsp||'-';
+  document.getElementById('det-fnac').textContent=s.fnac||'-';
+  document.getElementById('det-joined').textContent=s.joined||'-';
+  document.getElementById('det-pts').textContent=(s.pts||0).toLocaleString('es-AR')+' pts';
+  document.getElementById('det-producto').textContent=PROD_LABELS[s.producto]||s.producto||'-';
+  document.getElementById('det-email-edit').value=s.email||'';
+  document.getElementById('det-wsp-edit').value=s.wsp||'';
+  document.getElementById('det-edit-ok').style.display='none';
+  showDetTab('info');
+};
+
+window.volverLista=function(){
+  document.getElementById('socios-lista').style.display='block';
+  document.getElementById('socio-detalle').style.display='none';
+};
+
+window.showDetTab=async function(tab){
+  document.querySelectorAll('.detalle-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='info')||(i===1&&tab==='movimientos')));
+  document.getElementById('det-tab-info').style.display=tab==='info'?'block':'none';
+  document.getElementById('det-tab-movimientos').style.display=tab==='movimientos'?'block':'none';
+  if(tab==='movimientos'&&socioDetalle){
+    const q=query(collection(db,'socios',socioDetalle.uid,'movimientos'),orderBy('fecha','desc'));
+    const snap=await getDocs(q);
+    let rows='';
+    snap.forEach(d=>{
+      const m=d.data();
+      const fecha=m.fecha?.toDate?m.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Reciente';
+      const sucursal=m.sucursal?` · ${m.sucursal}`:'';
+      rows+=`<div class="mov-row">
+        <div class="mov-ico"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></div>
+        <div class="mov-info"><div class="title">${m.desc||'-'}</div><div class="sub">${fecha}${sucursal}</div></div>
+        <div class="mov-pts" style="color:${m.pts>0?'#16a34a':'#dc2626'}">${m.pts>0?'+':''}${m.pts} pts</div>
+      </div>`;
+    });
+    document.getElementById('det-movs-list').innerHTML=rows||'<div style="text-align:center;color:#9ca3af;padding:20px;font-size:12px">Sin movimientos</div>';
+  }
+};
+
+// BUSCAR SOCIO
+let buscarTimeout;
+window.buscarSocio=function(){
+  clearTimeout(buscarTimeout);
+  buscarTimeout=setTimeout(async()=>{
+    const val=document.getElementById('buscar-input').value.trim();
+    const box=document.getElementById('buscar-socio-box');
+    const err=document.getElementById('buscar-error');
+    socioSeleccionado=null;
+    box.style.display='none';err.style.display='none';
+    document.getElementById('btn-confirmar').style.display='none';
+    document.getElementById('pts-preview-box').style.display='none';
+    document.getElementById('success-box').style.display='none';
+    if(val.length<3)return;
+    const isDNI=/^\d+$/.test(val);
+    let found=null;
+    if(isDNI){const q=query(collection(db,'socios'),where('dni','==',val));const snap=await getDocs(q);if(!snap.empty)found=snap.docs[0].data();}
+    else{found=todosSocios.find(s=>(s.name||'').toLowerCase().includes(val.toLowerCase()))||null;}
+    if(found){
+      socioSeleccionado=found;
+      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(found.name)}</div><div><div class="socio-name">${found.name}</div><div class="socio-meta">${found.id} · ${(found.pts||0).toLocaleString('es-AR')} pts</div></div><span class="nivel-pill ${getNivelClass(found.pts||0).split(' ')[0]}">${getNivel(found.pts||0)}</span></div>`;
+      box.style.display='block';calcularPuntos();
+    }else{err.style.display='block';}
+  },400);
+};
+
+window.calcularPuntos=function(){
+  const monto=parseInt(document.getElementById('monto-input').value)||0;
+  const pts=Math.floor(monto/1000);
+  const preview=document.getElementById('pts-preview-box');
+  const btn=document.getElementById('btn-confirmar');
+  if(!socioSeleccionado||pts<=0){preview.style.display='none';btn.style.display='none';return;}
+  document.getElementById('pts-preview-num').textContent='+'+pts;
+  preview.style.display='block';btn.style.display='block';
+};
+
+window.confirmarPuntos=async function(){
+  if(!socioSeleccionado)return;
+  const monto=parseInt(document.getElementById('monto-input').value)||0;
+  const pts=Math.floor(monto/1000);
+  if(pts<=0)return;
+  const nivelAntes=getNivel(socioSeleccionado.pts||0);
+  await updateDoc(doc(db,'socios',socioSeleccionado.uid),{pts:increment(pts)});
+  await addDoc(collection(db,'socios',socioSeleccionado.uid,'movimientos'),{
+    desc:'Compra en tienda — $'+monto.toLocaleString('es-AR'),
+    pts,tipo:'compra',fecha:serverTimestamp(),
+    sucursal:getSucursal(adminEmail)
+  });
+  const nuevoPts=(socioSeleccionado.pts||0)+pts;
+  const nivelDespues=getNivel(nuevoPts);
+  let msg=`+${pts} puntos sumados a ${socioSeleccionado.name}`;
+  let sub=`Total: ${nuevoPts.toLocaleString('es-AR')} pts`;
+  if(nivelAntes!==nivelDespues)sub+=` · ¡Subió a ${nivelDespues}! 🎉`;
+  document.getElementById('success-msg').textContent=msg;
+  document.getElementById('success-sub').textContent=sub;
+  document.getElementById('success-box').style.display='block';
+  document.getElementById('btn-confirmar').style.display='none';
+  document.getElementById('pts-preview-box').style.display='none';
+  document.getElementById('buscar-input').value='';
+  document.getElementById('monto-input').value='';
+  document.getElementById('buscar-socio-box').style.display='none';
+  socioSeleccionado=null;
+  await cargarSocios();
+};
+
+// QR
+window.procesarQR=async function(){
+  const val=document.getElementById('qr-input').value.trim();
+  const box=document.getElementById('qr-socio-box');
+  const err=document.getElementById('qr-error');
+  socioQR=null;box.style.display='none';err.style.display='none';
+  document.getElementById('qr-btn-confirmar').style.display='none';
+  document.getElementById('qr-pts-preview').style.display='none';
+  document.getElementById('qr-success-box').style.display='none';
+  if(!val.includes('|'))return;
+  const uid=val.split('|')[1];
+  try{
+    const snap=await getDoc(doc(db,'socios',uid));
+    if(snap.exists()){
+      socioQR=snap.data();
+      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(socioQR.name)}</div><div><div class="socio-name">${socioQR.name}</div><div class="socio-meta">${socioQR.id} · ${(socioQR.pts||0).toLocaleString('es-AR')} pts</div></div><span class="nivel-pill ${getNivelClass(socioQR.pts||0).split(' ')[0]}">${getNivel(socioQR.pts||0)}</span></div>`;
+      box.style.display='block';calcularPuntosQR();
+    }else{err.textContent='Socio no encontrado.';err.style.display='block';}
+  }catch(e){err.textContent='Error al leer QR.';err.style.display='block';}
+};
+
+window.calcularPuntosQR=function(){
+  const monto=parseInt(document.getElementById('qr-monto').value)||0;
+  const pts=Math.floor(monto/1000);
+  if(!socioQR||pts<=0){document.getElementById('qr-pts-preview').style.display='none';document.getElementById('qr-btn-confirmar').style.display='none';return;}
+  document.getElementById('qr-pts-num').textContent='+'+pts;
+  document.getElementById('qr-pts-preview').style.display='block';
+  document.getElementById('qr-btn-confirmar').style.display='block';
+};
+
+window.confirmarPuntosQR=async function(){
+  if(!socioQR)return;
+  const monto=parseInt(document.getElementById('qr-monto').value)||0;
+  const pts=Math.floor(monto/1000);
+  if(pts<=0)return;
+  const nivelAntes=getNivel(socioQR.pts||0);
+  await updateDoc(doc(db,'socios',socioQR.uid),{pts:increment(pts)});
+  await addDoc(collection(db,'socios',socioQR.uid,'movimientos'),{desc:'Compra en tienda — $'+monto.toLocaleString('es-AR'),pts,tipo:'compra',fecha:serverTimestamp(),sucursal:getSucursal(adminEmail)});
+  const nuevoPts=(socioQR.pts||0)+pts;
+  const nivelDespues=getNivel(nuevoPts);
+  let sub=`Total: ${nuevoPts.toLocaleString('es-AR')} pts`;
+  if(nivelAntes!==nivelDespues)sub+=` · ¡Subió a ${nivelDespues}! 🎉`;
+  document.getElementById('qr-success-msg').textContent=`+${pts} puntos sumados a ${socioQR.name}`;
+  document.getElementById('qr-success-sub').textContent=sub;
+  document.getElementById('qr-success-box').style.display='block';
+  document.getElementById('qr-btn-confirmar').style.display='none';
+  document.getElementById('qr-input').value='';document.getElementById('qr-monto').value='';
+  document.getElementById('qr-socio-box').style.display='none';
+  socioQR=null;await cargarSocios();
+};
+
+// CANJE
+let buscarCanjeTimeout;
+window.buscarSocioCanje=function(){
+  clearTimeout(buscarCanjeTimeout);
+  buscarCanjeTimeout=setTimeout(async()=>{
+    const dni=document.getElementById('canje-dni').value.trim().replace(/\D/g,'');
+    const box=document.getElementById('canje-socio-box');
+    const err=document.getElementById('canje-error');
+    socioCanje=null;box.style.display='none';err.style.display='none';
+    document.getElementById('btn-canje-confirmar').style.display='none';
+    document.getElementById('canje-preview').style.display='none';
+    document.getElementById('canje-success-box').style.display='none';
+    if(dni.length<7)return;
+    const q=query(collection(db,'socios'),where('dni','==',dni));
+    const snap=await getDocs(q);
+    if(!snap.empty){
+      socioCanje=snap.docs[0].data();
+      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(socioCanje.name)}</div><div><div class="socio-name">${socioCanje.name}</div><div class="socio-meta">${socioCanje.id} · ${(socioCanje.pts||0).toLocaleString('es-AR')} pts disponibles</div></div><span class="nivel-pill ${getNivelClass(socioCanje.pts||0).split(' ')[0]}">${getNivel(socioCanje.pts||0)}</span></div>`;
+      box.style.display='block';calcularCanje();
+    }else{err.textContent='Socio no encontrado.';err.style.display='block';}
+  },400);
+};
+
+window.calcularCanje=function(){
+  const pts=parseInt(document.getElementById('canje-pts').value)||0;
+  if(!socioCanje||pts<=0){document.getElementById('canje-preview').style.display='none';document.getElementById('btn-canje-confirmar').style.display='none';return;}
+  const opcion=CANJES.slice().reverse().find(c=>c.pts<=pts)||null;
+  const desc=opcion?opcion.desc:'Canje personalizado';
+  document.getElementById('canje-preview-pts').textContent='-'+pts.toLocaleString('es-AR')+' pts';
+  document.getElementById('canje-preview-desc').textContent=desc;
+  document.getElementById('canje-preview').style.display='block';
+  document.getElementById('btn-canje-confirmar').style.display=(socioCanje.pts||0)>=pts?'block':'none';
+  if((socioCanje.pts||0)<pts){const e=document.getElementById('canje-error');e.textContent='Puntos insuficientes (tiene '+(socioCanje.pts||0)+')';e.style.display='block';}
+  else{document.getElementById('canje-error').style.display='none';}
+};
+
+window.confirmarCanje=async function(){
+  if(!socioCanje)return;
+  const pts=parseInt(document.getElementById('canje-pts').value)||0;
+  if(pts<=0||(socioCanje.pts||0)<pts)return;
+  const opcion=CANJES.slice().reverse().find(c=>c.pts<=pts)||{desc:'Canje'};
+  await updateDoc(doc(db,'socios',socioCanje.uid),{pts:increment(-pts)});
+  await addDoc(collection(db,'socios',socioCanje.uid,'movimientos'),{
+    desc:'Canje: '+opcion.desc,pts:-pts,tipo:'canje',fecha:serverTimestamp(),sucursal:getSucursal(adminEmail)
+  });
+  document.getElementById('canje-success-msg').textContent=`Canje registrado: -${pts} pts a ${socioCanje.name}`;
+  document.getElementById('canje-success-sub').textContent=`Descuento: ${opcion.desc} · Saldo restante: ${((socioCanje.pts||0)-pts).toLocaleString('es-AR')} pts`;
+  document.getElementById('canje-success-box').style.display='block';
+  document.getElementById('btn-canje-confirmar').style.display='none';
+  document.getElementById('canje-preview').style.display='none';
+  document.getElementById('canje-dni').value='';document.getElementById('canje-pts').value='';
+  document.getElementById('canje-socio-box').style.display='none';
+  socioCanje=null;await cargarSocios();
+};
+
+window.showTab=function(name){
+  ['cargar','canje','socios','cupones','canjes','flash'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['cargar','canje','socios','cupones','canjes','flash'][i]===name));
+  if(name==='socios')cargarSocios();
+  if(name==='flash')cargarFlashLista();
+};
+
+
+
+// ---- VALIDAR CANJE ----
+let canjeEncontrado = null;
+
+window.buscarCanje = async function() {
+  const codigo = document.getElementById('canje-codigo-input').value.trim().toUpperCase();
+  const result = document.getElementById('canje-result');
+  const err = document.getElementById('canje-error-result');
+  const success = document.getElementById('canje-success-result');
+  canjeEncontrado = null;
+  result.style.display='none'; err.style.display='none'; success.style.display='none';
+  document.getElementById('btn-usar-canje').style.display='none';
+  if (codigo.length < 8) return;
+  try {
+    const snap = await getDoc(doc(db,'canjes',codigo));
+    if (!snap.exists()) { err.textContent='Código no encontrado.'; err.style.display='block'; return; }
+    canjeEncontrado = snap.data();
+    canjeEncontrado.codigo = codigo;
+    result.style.display='block';
+    document.getElementById('canje-result-avatar').textContent = getInitials(canjeEncontrado.nombre||'-');
+    document.getElementById('canje-result-nombre').textContent = canjeEncontrado.nombre||'-';
+    if (canjeEncontrado.usado) {
+      result.style.background='#f3f4f6';
+      document.getElementById('canje-result-meta').textContent = '⚠️ Este canje ya fue utilizado';
+      document.getElementById('canje-descuento-box').style.background='#e5e7eb';
+      document.getElementById('canje-descuento-box').style.color='#9ca3af';
+      document.getElementById('canje-result-desc').textContent = canjeEncontrado.desc||'-';
+      document.getElementById('canje-result-venc').textContent = 'CANJE YA USADO';
+    } else {
+      const venc = canjeEncontrado.vencimiento ? new Date(canjeEncontrado.vencimiento) : null;
+      const vencido = venc && new Date() > venc;
+      if (vencido) {
+        result.style.background='#fef2f2';
+        document.getElementById('canje-result-meta').textContent = '⚠️ Este canje está vencido';
+        document.getElementById('canje-descuento-box').style.background='#fef2f2';
+        document.getElementById('canje-result-desc').textContent = canjeEncontrado.desc||'-';
+        document.getElementById('canje-result-venc').textContent = 'VENCIDO';
+      } else {
+        result.style.background='#f0fdf4';
+        document.getElementById('canje-result-meta').textContent = '✓ Canje válido · Listo para aplicar';
+        document.getElementById('canje-descuento-box').style.background='#dcfce7';
+        document.getElementById('canje-descuento-box').style.color='#15803d';
+        document.getElementById('canje-result-desc').textContent = canjeEncontrado.desc||'-';
+        document.getElementById('canje-result-venc').textContent = venc ? 'Válido hasta: '+venc.toLocaleDateString('es-AR') : '';
+        document.getElementById('btn-usar-canje').style.display='block';
+      }
+    }
+  } catch(e) { err.textContent='Error al buscar.'; err.style.display='block'; }
+};
+
+window.usarCanje = async function() {
+  if (!canjeEncontrado || canjeEncontrado.usado) return;
+  await updateDoc(doc(db,'canjes',canjeEncontrado.codigo), {
+    usado:true, usadoEn:serverTimestamp(), usadoEnSucursal:getSucursal(adminEmail)
+  });
+  document.getElementById('btn-usar-canje').style.display='none';
+  document.getElementById('canje-result').style.display='none';
+  document.getElementById('canje-success-result').style.display='block';
+  document.getElementById('canje-success-result-msg').textContent = 'Canje aplicado: '+canjeEncontrado.desc+' para '+canjeEncontrado.nombre;
+  document.getElementById('canje-codigo-input').value='';
+  canjeEncontrado=null;
+};
+
+// ---- PROMOS FLASH ----
+window.cargarFlash = async function() {
+  const titulo = document.getElementById('flash-titulo').value.trim();
+  const sub = document.getElementById('flash-sub').value.trim();
+  const badge = document.getElementById('flash-badge').value.trim();
+  const imagen = document.getElementById('flash-imagen').value.trim();
+  const venc = document.getElementById('flash-venc').value;
+  if (!titulo) return;
+  await addDoc(collection(db,'flash_promos'), {
+    titulo, sub, badge, imagen, vencimiento:venc||null,
+    activa:true, createdAt:serverTimestamp()
+  });
+  document.getElementById('flash-titulo').value='';
+  document.getElementById('flash-sub').value='';
+  document.getElementById('flash-badge').value='';
+  document.getElementById('flash-imagen').value='';
+  document.getElementById('flash-venc').value='';
+  document.getElementById('flash-success').style.display='block';
+  setTimeout(()=>document.getElementById('flash-success').style.display='none',3000);
+  cargarFlashLista();
+};
+
+async function cargarFlashLista() {
+  const snap = await getDocs(collection(db,'flash_promos'));
+  let rows='';
+  snap.forEach(d => {
+    const p=d.data(); const id=d.id;
+    rows+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1"><div style="font-size:13px;font-weight:700">${p.titulo}</div><div style="font-size:11px;color:var(--text-muted)">${p.sub||''} ${p.vencimiento?'· Hasta '+p.vencimiento:''}</div></div>
+      <span style="background:${p.activa?'#dcfce7':'#f3f4f6'};color:${p.activa?'#15803d':'#9ca3af'};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">${p.activa?'Activa':'Inactiva'}</span>
+      <button onclick="toggleFlash('${id}',${!p.activa})" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11px;cursor:pointer">${p.activa?'Desactivar':'Activar'}</button>
+    </div>`;
+  });
+  document.getElementById('flash-lista').innerHTML=rows||'<div style="font-size:12px;color:var(--text-muted);padding:10px">Sin promos cargadas</div>';
+}
+
+window.toggleFlash = async function(id, estado) {
+  await updateDoc(doc(db,'flash_promos',id),{activa:estado});
+  cargarFlashLista();
+};
+
+window.guardarEdicionAdmin = async function() {
+  if (!socioDetalle) return;
+  const email = document.getElementById('det-email-edit').value.trim();
+  const wsp = document.getElementById('det-wsp-edit').value.trim();
+  if (!email || !wsp) return;
+  await updateDoc(doc(db, 'socios', socioDetalle.uid), { email, wsp });
+  document.getElementById('det-edit-ok').style.display = 'inline';
+  setTimeout(() => document.getElementById('det-edit-ok').style.display = 'none', 3000);
+  await cargarSocios();
+};
+
+
+// ---- CUPONES ----
+let cuponEncontrado = null;
+
+window.buscarCupon = async function() {
+  const val = document.getElementById('cupon-input').value.trim().toUpperCase();
+  const resultBox = document.getElementById('cupon-result-box');
+  const errBox = document.getElementById('cupon-error-box');
+  const successBox = document.getElementById('cupon-success-box');
+  cuponEncontrado = null;
+  resultBox.style.display='none'; errBox.style.display='none'; successBox.style.display='none';
+  document.getElementById('btn-usar-cupon').style.display='none';
+
+  // Extract code from QR content (CUPON|CODE|uid) or direct code
+  let codigo = val;
+  if (val.startsWith('CUPON|')) {
+    codigo = val.split('|')[1];
+    document.getElementById('cupon-input').value = codigo;
+  }
+  if (codigo.length < 8) return;
+
+  try {
+    const snap = await getDoc(doc(db, 'cupones', codigo));
+    if (!snap.exists()) { errBox.textContent='Cupón no encontrado.'; errBox.style.display='block'; return; }
+    cuponEncontrado = snap.data();
+    cuponEncontrado.codigo = codigo;
+
+    // Show result
+    resultBox.style.display='block';
+    document.getElementById('cupon-avatar').textContent = getInitials(cuponEncontrado.nombre||'-');
+    document.getElementById('cupon-nombre').textContent = cuponEncontrado.nombre||'-';
+
+    if (cuponEncontrado.usado) {
+      resultBox.style.background='#f3f4f6';
+      document.getElementById('cupon-meta').textContent = '⚠️ Este cupón ya fue utilizado';
+      document.getElementById('cupon-descuento-box').style.background='#e5e7eb';
+      document.getElementById('cupon-descuento-box').style.color='#9ca3af';
+      document.getElementById('cupon-descuento-val').textContent = cuponEncontrado.descuento||'10%';
+      document.getElementById('cupon-descuento-desc').textContent = 'CUPÓN YA USADO';
+      document.getElementById('btn-usar-cupon').style.display='none';
+    } else {
+      resultBox.style.background='#f0fdf4';
+      document.getElementById('cupon-meta').textContent = '✓ Cupón válido · Listo para usar';
+      document.getElementById('cupon-descuento-box').style.background='#dcfce7';
+      document.getElementById('cupon-descuento-box').style.color='#15803d';
+      document.getElementById('cupon-descuento-val').textContent = cuponEncontrado.descuento||'10%';
+      document.getElementById('cupon-descuento-desc').textContent = cuponEncontrado.desc||'Descuento en compra';
+      document.getElementById('btn-usar-cupon').style.display='block';
+    }
+  } catch(e) { errBox.textContent='Error al buscar cupón.'; errBox.style.display='block'; }
+};
+
+window.usarCupon = async function() {
+  if (!cuponEncontrado || cuponEncontrado.usado) return;
+  await updateDoc(doc(db,'cupones',cuponEncontrado.codigo), { usado:true, usadoEn:serverTimestamp(), usadoEnSucursal:getSucursal(adminEmail) });
+  await updateDoc(doc(db,'socios',cuponEncontrado.uid), { cuponUsado:true });
+  document.getElementById('btn-usar-cupon').style.display='none';
+  document.getElementById('cupon-result-box').style.display='none';
+  document.getElementById('cupon-success-box').style.display='block';
+  document.getElementById('cupon-input').value='';
+  cuponEncontrado=null;
+};
+
+document.getElementById('admin-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.adminLogin();});
+</script>
+</body>
+</html>
