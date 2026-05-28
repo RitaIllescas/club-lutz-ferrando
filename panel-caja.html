@@ -150,7 +150,6 @@ tr:hover td{background:#f9fafb;cursor:pointer;}
 
     <div class="tabs">
       <button class="tab active" onclick="showTab('cargar')">Cargar puntos</button>
-      <button class="tab" onclick="showTab('canje')">Registrar canje</button>
       <button class="tab" onclick="showTab('socios')">Ver socios</button>
       <button class="tab" onclick="showTab('cupones')">Validar cupón</button>
       <button class="tab" onclick="showTab('canjes')">Validar canje</button>
@@ -170,7 +169,7 @@ tr:hover td{background:#f9fafb;cursor:pointer;}
           <button class="btn-main" id="btn-confirmar" onclick="confirmarPuntos()">Confirmar y sumar puntos</button>
           <div class="success-box" id="success-box"><div class="check">✓</div><div class="msg" id="success-msg">-</div><div class="sub" id="success-sub">-</div></div>
         </div>
-        <div class="card">
+        <div class="card" style="display:none">
           <div class="card-title">Escanear QR</div>
           <div style="background:var(--gray-light);border-radius:9px;padding:16px;text-align:center;margin-bottom:12px;">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="width:36px;height:36px;color:var(--gray);margin:0 auto 6px;display:block"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/></svg>
@@ -371,7 +370,12 @@ const PROD_LABELS={monofocales:'Monofocales',bifocales:'Bifocales',ocupacionales
 function getNivel(pts){if(pts>=10000)return'Black';if(pts>=2000)return'Gold';return'Básico';}
 function getNivelClass(pts){if(pts>=10000)return'pill-black badge-black';if(pts>=2000)return'pill-gold badge-gold';return'pill-basico badge-basico';}
 function getInitials(name){return(name||'').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();}
-function getSucursal(email){if(email.includes('malargue'))return'Sucursal Malargüe';if(email.includes('sucursal1')||email.includes('central'))return'Sucursal San Rafael 1';if(email.includes('sucursal2'))return'Sucursal San Rafael 2';return'Sucursal';}
+function getSucursal(email){
+  if(email.includes('malargue'))return'Malargüe';
+  if(email.includes('central'))return'Central';
+  if(email.includes('sucursal'))return'Sucursal';
+  return email;
+}
 
 onAuthStateChanged(auth,user=>{
   if(user){
@@ -524,7 +528,27 @@ window.buscarSocio=function(){
     else{found=todosSocios.find(s=>(s.name||'').toLowerCase().includes(val.toLowerCase()))||null;}
     if(found){
       socioSeleccionado=found;
-      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(found.name)}</div><div><div class="socio-name">${found.name}</div><div class="socio-meta">${found.id} · ${(found.pts||0).toLocaleString('es-AR')} pts</div></div><span class="nivel-pill ${getNivelClass(found.pts||0).split(' ')[0]}">${getNivel(found.pts||0)}</span></div>`;
+      const hoyB=new Date(); hoyB.setHours(0,0,0,0);
+      let fnacB=null;
+      if(found.fnac){
+        if(found.fnac.includes('-')){const p=found.fnac.split('-');fnacB=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));}
+        else if(found.fnac.includes('/')){const p=found.fnac.split('/');fnacB=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));}
+      }
+      const cumpleAnio=fnacB?new Date(hoyB.getFullYear(),fnacB.getMonth(),fnacB.getDate()):null;
+      const diffDiasB=cumpleAnio?Math.floor((hoyB-cumpleAnio)/(1000*60*60*24)):-1;
+      const esCumpleB=diffDiasB>=0&&diffDiasB<=30;
+      const diasRestB=esCumpleB?30-diffDiasB:0;
+      const codigoCumpleB='CUMPLE-'+(found.dni||'')+'-'+hoyB.getFullYear();
+      const cumpleBanner=esCumpleB?`
+        <div style="background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:10px;padding:12px;margin-top:10px;color:#fff">
+          <div style="font-size:16px;margin-bottom:4px">🎂 ${diffDiasB===0?'¡HOY ES SU CUMPLEAÑOS!':'Está en período de cumpleaños'}</div>
+          <div style="font-size:12px;opacity:0.9;margin-bottom:6px">${diffDiasB===0?'¡Felicitalo!':'Cumplió hace '+diffDiasB+' día'+(diffDiasB!==1?'s':'')}</div>
+          <div style="background:rgba(255,255,255,0.2);border-radius:8px;padding:8px;font-size:12px">
+            <div>🎁 Cupón activo: <strong>${codigoCumpleB}</strong></div>
+            <div style="margin-top:3px">10% OFF · ${diasRestB===0?'Vence hoy':'Quedan '+diasRestB+' día'+(diasRestB!==1?'s':'')}</div>
+          </div>
+        </div>`:'';
+      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(found.name)}</div><div><div class="socio-name">${found.name}</div><div class="socio-meta">${found.id} · ${(found.pts||0).toLocaleString('es-AR')} pts</div></div><span class="nivel-pill ${getNivelClass(found.pts||0).split(' ')[0]}">${getNivel(found.pts||0)}</span></div>${cumpleBanner}`;
       box.style.display='block';calcularPuntos();
     }else{err.style.display='block';}
   },400);
@@ -676,8 +700,8 @@ window.confirmarCanje=async function(){
 };
 
 window.showTab=function(name){
-  ['cargar','canje','socios','cupones','canjes','flash'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['cargar','canje','socios','cupones','canjes','flash'][i]===name));
+  ['cargar','socios','cupones','canjes','flash'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.style.display=t===name?'block':'none';});
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['cargar','socios','cupones','canjes','flash'][i]===name));
   if(name==='socios')cargarSocios();
   if(name==='flash')cargarFlashLista();
 };
