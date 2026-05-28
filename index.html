@@ -485,6 +485,7 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
         <div id="cupon-cumple-qr" style="display:flex;justify-content:center;margin-bottom:10px"></div>
         <div style="font-size:13px;font-weight:700;color:#7c3aed;letter-spacing:2px" id="cupon-cumple-codigo">-</div>
         <div style="font-size:11px;color:#6b7280;margin-top:4px" id="cupon-cumple-vencimiento">-</div>
+        <div id="cupon-cumple-countdown" style="margin-top:8px;background:#ede9fe;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;color:#6d28d9;display:none">⏳ Quedan X días</div>
       </div>
       <div style="background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:12px;font-size:12px;color:#6d28d9;text-align:center">
         ✓ Cupón válido · Uso único · No acumulable con otras promociones
@@ -1024,8 +1025,10 @@ async function checkCumpleanos(s) {
 }
 
 function renderCuponCumple(s) {
-  if (!s.cuponCumple) return;
-  const codigo = s.cuponCumple;
+  // Use stored code or derive from DNI+year
+  const anio = new Date().getFullYear();
+  const codigo = s.cuponCumple || ('CUMPLE-' + (s.dni||'') + '-' + anio);
+  if (!s.dni && !s.cuponCumple) return;
   getDoc(doc(db, 'cupones', codigo)).then(snap => {
     if (!snap.exists()) return;
     const c = snap.data();
@@ -1045,6 +1048,14 @@ function renderCuponCumple(s) {
       document.getElementById('cupon-cumple-activo').style.display = 'block';
       document.getElementById('cupon-cumple-codigo').textContent = codigo;
       document.getElementById('cupon-cumple-vencimiento').textContent = 'Válido hasta: ' + (venc ? venc.toLocaleDateString('es-AR') : '-');
+      // Countdown
+      if (venc) {
+        const hoyC = new Date(); hoyC.setHours(0,0,0,0);
+        const diasR = Math.ceil((venc - hoyC) / (1000*60*60*24));
+        const cdEl = document.getElementById('cupon-cumple-countdown');
+        cdEl.style.display = 'block';
+        cdEl.textContent = diasR === 0 ? '⚠️ Vence hoy' : diasR === 1 ? '⏳ Queda 1 día' : `⏳ Quedan ${diasR} días para usarlo`;
+      }
       if (!document.getElementById('cupon-cumple-qr').hasChildNodes()) {
         new QRCode(document.getElementById('cupon-cumple-qr'), {
           text: 'CUPON|' + codigo + '|' + s.uid,
