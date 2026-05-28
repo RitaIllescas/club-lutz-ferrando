@@ -326,9 +326,12 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
     <div id="banner-cumple" style="display:none;margin:0 14px 12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.08)"></div>
       <div style="font-size:22px;margin-bottom:4px">🎂</div>
-      <div style="font-size:16px;font-weight:700;margin-bottom:2px">¡Feliz cumpleaños!</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px">¡Feliz cumpleaños!</div>
       <div style="font-size:12px;opacity:0.9;margin-bottom:12px">Tenés un cupón especial de cumpleaños esperándote</div>
-      <button onclick="goTo('cupon-cumple')" style="background:rgba(255,255,255,0.25);border:none;border-radius:8px;padding:8px 16px;color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">Ver mi regalo 🎁</button>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <button onclick="goTo('cupon-cumple')" style="background:rgba(255,255,255,0.25);border:none;border-radius:8px;padding:8px 16px;color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">Ver mi regalo 🎁</button>
+        <div id="cumple-countdown" style="font-size:11px;opacity:0.85;text-align:right"></div>
+      </div>
     </div>
     <div class="section-head">Accesos rápidos</div>
     <div class="quick-grid">
@@ -338,8 +341,7 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
       <div class="quick-card" onclick="goTo('historial')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Historial</span></div>
       <div class="quick-card" id="qc-cupon" onclick="goTo('cupon')" style="display:none"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg><span>Cupón regalo 🎁</span></div>
     </div>
-    <div class="section-head">Promos vigentes</div>
-    <div id="promos-container"></div>
+
     <div class="section-head">Promos flash ⚡</div>
     <div id="flash-container" style="padding:0 14px 14px"></div>
   </div>
@@ -766,7 +768,6 @@ function renderHome(s,nivel,nivelLabel){
   document.getElementById('hero-prog-pct').textContent=progFill+'%';
   document.getElementById('hero-prog-fill').style.width=progFill+'%';
   document.getElementById('hero-urgency').textContent=getUrgency(s.pts,nivel);
-  // Flash promos from Firebase
   renderFlashPromos();
   // show cupon card if active
   const qcCupon=document.getElementById('qc-cupon');
@@ -871,7 +872,16 @@ function renderBeneficios(nivel){
     const unlocked=idx<=userIdx;
     html+=`<div class="nivel-section"><div class="nivel-header"><span class="nivel-badge ${badgeCls[n]}">${labels[n].toUpperCase()}</span>${!unlocked?'<span class="locked-msg">🔒 Requiere '+labels[n]+'</span>':''}</div><div class="benef-list">${BENEFICIOS[n].map(b=>`<div class="benef-row ${unlocked?'':'locked'}"><div class="benef-ico ${icoClass[n]}">${discSvg}</div><div class="benef-text"><div class="title">${b.title}</div><div class="sub">${b.sub}</div></div><div class="benef-check">${unlocked?checkSvg:lockSvg}</div></div>`).join('')}</div></div>`;
   });
-  document.getElementById('benef-content').innerHTML=html;
+  // Add matching promos at top
+  const promosFiltradas = PROMOS.filter(p=>p.niveles&&p.niveles.includes(nivel));
+  let promoHtml = '';
+  if (promosFiltradas.length > 0) {
+    const discSvg2='<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01"/></svg>';
+    promoHtml = '<div style="padding:0 16px 4px"><div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Promos activas para tu nivel</div>'
+      + promosFiltradas.map(p=>`<div class="promo-card" style="margin-bottom:8px"><div class="promo-header"><div class="promo-ico benef-ico ${p.ico}">${discSvg2}</div><div><div class="promo-title">${p.title}</div><div class="promo-sub">${p.sub}</div></div><span class="promo-tag ${p.tagCls}">${p.tag}</span></div></div>`).join('')
+      + '</div>';
+  }
+  document.getElementById('benef-content').innerHTML = promoHtml + html;
 }
 
 async function renderHistorial(s){
@@ -947,24 +957,38 @@ emailjs.init('X3oU0QsNinkbToeQD');
 async function checkCumpleanos(s) {
   if (!s || !s.fnac) return;
   const hoy = new Date();
-  // Parse date safely regardless of format (YYYY-MM-DD or DD/MM/YYYY)
+  hoy.setHours(0,0,0,0);
+  // Parse date safely
   let fnac;
   if (s.fnac.includes('-')) {
-    const parts = s.fnac.split('-');
-    fnac = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    const p = s.fnac.split('-');
+    fnac = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
   } else if (s.fnac.includes('/')) {
-    const parts = s.fnac.split('/');
-    fnac = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-  } else {
-    fnac = new Date(s.fnac);
-  }
-  const esCumple = fnac.getDate() === hoy.getDate() && fnac.getMonth() === hoy.getMonth();
-  console.log('=== CUMPLE CHECK ===');
-  console.log('fnac dia:', fnac.getDate(), 'hoy dia:', hoy.getDate());
-  console.log('fnac mes:', fnac.getMonth(), 'hoy mes:', hoy.getMonth());
-  console.log('esCumple:', esCumple);
+    const p = s.fnac.split('/');
+    fnac = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+  } else { fnac = new Date(s.fnac); }
+  
+  // Birthday this year
+  const cumpleEsteAnio = new Date(hoy.getFullYear(), fnac.getMonth(), fnac.getDate());
+  const diffMs = hoy - cumpleEsteAnio;
+  const diffDias = Math.floor(diffMs / (1000*60*60*24));
+  
+  // Show banner if today is birthday OR within 30 days after
+  const esCumple = diffDias >= 0 && diffDias <= 30;
+  const diasRestantes = 30 - diffDias;
+  
   if (!esCumple) return;
-  console.log('=== ES CUMPLEAÑOS! Mostrando banner ===');
+  
+  // Show banner with countdown
+  document.getElementById('banner-cumple').style.display = 'block';
+  const countdownEl = document.getElementById('cumple-countdown');
+  if (countdownEl) {
+    if (diffDias === 0) {
+      countdownEl.textContent = '¡Hoy es tu día! 🎉';
+    } else {
+      countdownEl.textContent = `⏳ Quedan ${diasRestantes} días`;
+    }
+  }
 
   // Check if already has birthday coupon for this year
   const anio = hoy.getFullYear();
