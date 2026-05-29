@@ -338,7 +338,7 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
       <div class="quick-card" onclick="goTo('canje')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/></svg><span>Canjear puntos</span></div>
       <div class="quick-card" onclick="goTo('beneficios')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 12v10H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg><span>Beneficios</span></div>
       <div class="quick-card" onclick="goTo('historial')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Historial</span></div>
-      <div class="quick-card" id="qc-cupon" onclick="goTo('cupon')" style="display:none"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg><span>Cupón regalo 🎁</span></div>
+      <div class="quick-card" id="qc-cupon" onclick="goTo('cupon')" style="display:none;border-color:#009180;background:#e0f5f2"><svg fill="none" stroke="#006b5f" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg><span style="color:#006b5f">🎁 $10.000 regalo</span></div>
     </div>
 
     <div class="section-head">Promos flash ⚡</div>
@@ -514,22 +514,36 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
 
     <!-- CUPON ACTIVO -->
     <div id="cupon-activo">
-      <div style="background:linear-gradient(135deg,#006b5f,#009180);border-radius:16px;padding:22px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden">
+      <!-- Header con logo y saludo -->
+      <div style="background:linear-gradient(135deg,#006b5f,#009180);border-radius:16px;padding:22px;color:#fff;margin-bottom:14px;position:relative;overflow:hidden;text-align:center">
         <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
-        <div style="font-size:11px;opacity:0.8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">🎁 Regalo de bienvenida</div>
-        <div style="font-size:32px;font-weight:700;margin-bottom:4px">10% OFF</div>
-        <div style="font-size:13px;opacity:0.85">En tu primera compra · Uso único</div>
-        <div style="margin-top:16px;background:rgba(255,255,255,0.15);border-radius:10px;padding:10px;font-size:11px;opacity:0.9">
-          Mostrá este cupón en caja antes de que te facturen. El vendedor lo valida y aplica el descuento.
+        <div style="position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
+        <img src="/lf-logo.png" style="width:60px;height:auto;display:block;margin:0 auto 10px;" alt="LF"/>
+        <img src="/lf-text.png" style="width:120px;height:auto;display:block;margin:0 auto 14px;" alt="Lutz Ferrando"/>
+        <div style="font-size:13px;opacity:0.85;margin-bottom:6px">🎁 ¡Bienvenido/a al club!</div>
+        <div style="font-size:13px;opacity:0.85;line-height:1.5">Te regalamos este cupón especial<br/>por unirte a nuestra familia.</div>
+      </div>
+      <!-- Valor del cupón -->
+      <div style="background:#fff;border:2.5px solid #009180;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">
+        <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tu regalo de bienvenida</div>
+        <div style="font-size:42px;font-weight:700;color:#006b5f">$10.000</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px">de descuento en cualquier producto</div>
+        <div style="margin:14px 0;border-top:1px dashed #e5e7eb"></div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:6px">Código de cupón:</div>
+        <div style="font-size:16px;font-weight:700;color:#006b5f;letter-spacing:3px;background:#e0f5f2;padding:10px 16px;border-radius:8px;display:inline-block" id="cupon-codigo">-</div>
+        <!-- Countdown -->
+        <div id="cupon-countdown" style="margin-top:12px;background:#fff7ed;border-radius:8px;padding:8px 12px;display:none">
+          <div style="font-size:11px;color:#92400e;font-weight:600" id="cupon-countdown-text">⏳ Quedan X días</div>
+          <div style="height:6px;background:#fed7aa;border-radius:10px;margin-top:6px;overflow:hidden">
+            <div id="cupon-countdown-bar" style="height:100%;background:#d97706;border-radius:10px;transition:width 0.5s"></div>
+          </div>
         </div>
       </div>
-      <div style="background:#fff;border:2px dashed #009180;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">
-        <div id="cupon-qr" style="display:flex;justify-content:center;margin-bottom:10px"></div>
-        <div style="font-size:13px;font-weight:700;color:#006b5f;letter-spacing:2px" id="cupon-codigo">-</div>
-        <div style="font-size:11px;color:#6b7280;margin-top:4px">Código de cupón</div>
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px;font-size:12px;color:#15803d;text-align:center;margin-bottom:14px">
+        ✓ Uso único · No acumulable con otras promociones
       </div>
-      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px;font-size:12px;color:#15803d;text-align:center">
-        ✓ Cupón válido · Uso único · No acumulable
+      <div style="background:#f8fafc;border-radius:10px;padding:14px;font-size:12px;color:#6b7280;text-align:center">
+        Mostrá este cupón al vendedor en caja antes de que te facturen. El descuento se aplica manualmente.
       </div>
     </div>
 
@@ -539,6 +553,15 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
         <div style="font-size:40px;margin-bottom:10px">✓</div>
         <div style="font-size:16px;font-weight:700;color:#6b7280">Cupón ya utilizado</div>
         <div style="font-size:13px;color:#9ca3af;margin-top:6px">Este cupón fue canjeado en una compra anterior.</div>
+      </div>
+    </div>
+
+    <!-- CUPON VENCIDO -->
+    <div id="cupon-vencido" style="display:none">
+      <div style="background:#fef2f2;border-radius:16px;padding:24px;text-align:center">
+        <div style="font-size:40px;margin-bottom:10px">⏰</div>
+        <div style="font-size:16px;font-weight:700;color:#dc2626">Cupón vencido</div>
+        <div style="font-size:13px;color:#9ca3af;margin-top:6px">Este cupón ya no está vigente.</div>
       </div>
     </div>
 
@@ -710,11 +733,15 @@ window.doRegister=async function(){
     await setDoc(doc(db,'socios',cred.user.uid), socioData);
     // Generar cupón de bienvenida
     const codigo='CLF-'+Math.random().toString(36).substr(2,8).toUpperCase();
+    const vencCupon=new Date(); vencCupon.setDate(vencCupon.getDate()+30);
     const cuponRef=doc(db,'cupones',codigo);
     await setDoc(cuponRef,{
       uid:cred.user.uid, nombre, codigo,
-      descuento:'10%', desc:'10% OFF en primera compra',
-      usado:false, createdAt:serverTimestamp()
+      descuento:'$10.000', desc:'$10.000 de descuento en cualquier producto',
+      valor:10000,
+      usado:false,
+      vencimiento:vencCupon.toISOString().split('T')[0],
+      createdAt:serverTimestamp()
     });
     await updateDoc(doc(db,'socios',cred.user.uid),{cuponBienvenida:codigo});
     err.classList.remove('show');
