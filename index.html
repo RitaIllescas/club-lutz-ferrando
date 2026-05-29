@@ -552,10 +552,6 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
         <div style="margin:14px 0;border-top:1px dashed #e5e7eb"></div>
         <div style="font-size:11px;color:#6b7280;margin-bottom:6px">Código de cupón:</div>
         <div style="font-size:16px;font-weight:700;color:#006b5f;letter-spacing:3px;background:#e0f5f2;padding:10px 16px;border-radius:8px;display:inline-block" id="cupon-codigo">-</div>
-        <!-- QR -->
-        <div id="qc-cupon" style="display:flex;justify-content:center;margin:14px 0 4px">
-          <div id="cupon-qr"></div>
-        </div>
         <!-- Countdown -->
         <div id="cupon-countdown" style="margin-top:12px;background:#fff7ed;border-radius:8px;padding:8px 12px;display:none">
           <div style="font-size:11px;color:#92400e;font-weight:600" id="cupon-countdown-text">⏳ Quedan X días</div>
@@ -822,13 +818,15 @@ function renderHome(s,nivel,nivelLabel){
   document.getElementById('hero-urgency').textContent=getUrgency(s.pts,nivel);
   if(document.getElementById('promos-container')) document.getElementById('promos-container').innerHTML='';
   renderFlashPromos();
-  // Ocultar banner cumple por defecto; solo renderCuponCumple lo muestra si corresponde
-  document.getElementById('banner-cumple').style.display='none';
+  // show cupon card if active
+  // Hide birthday banner if coupon was used
+  if(s.cuponCumpleUsado) document.getElementById('banner-cumple').style.display='none';
   // Show bienvenida banner
   const bannerBienvenida = document.getElementById('banner-bienvenida');
-  if (bannerBienvenida && s.cuponBienvenida) {
+  if (bannerBienvenida && s.cuponBienvenida && !s.cuponUsado) {
+    // Get vencimiento from Firebase
     getDoc(doc(db,'cupones',s.cuponBienvenida)).then(snap => {
-      if (!snap.exists()) { bannerBienvenida.style.display='none'; return; }
+      if (!snap.exists()) return;
       const c = snap.data();
       if (c.usado) { bannerBienvenida.style.display='none'; return; }
       const hoyB = new Date(); hoyB.setHours(0,0,0,0);
@@ -838,7 +836,7 @@ function renderHome(s,nivel,nivelLabel){
       if (vencB) {
         const diasR = Math.ceil((vencB - hoyB)/(1000*60*60*24));
         const pct = Math.max(0,Math.min(100,(diasR/30)*100));
-        document.getElementById('bienvenida-countdown-text').textContent =
+        document.getElementById('bienvenida-countdown-text').textContent = 
           diasR <= 1 ? '⚠️ ¡Vence hoy!' : `⏳ Quedan ${diasR} días para usarlo`;
         document.getElementById('bienvenida-countdown-bar').style.width = pct+'%';
       }
@@ -1189,54 +1187,27 @@ let cuponQRGenerated = false;
 // crearCuponBienvenida moved inline
 
 function renderCupon(s) {
-  if (!s.cuponBienvenida) {
+  if (!s.cuponBienvenida) { document.getElementById('cupon-activo').style.display='none'; document.getElementById('cupon-usado').style.display='none'; return; }
+  if (s.cuponUsado) {
     document.getElementById('cupon-activo').style.display='none';
-    document.getElementById('cupon-usado').style.display='none';
-    document.getElementById('cupon-vencido').style.display='none';
-    return;
-  }
-  getDoc(doc(db,'cupones',s.cuponBienvenida)).then(snap => {
-    const c = snap.exists() ? snap.data() : null;
-    const usado = c ? c.usado : s.cuponUsado;
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    const venc = c && c.vencimiento ? new Date(c.vencimiento) : null;
-    const vencido = venc && hoy > venc;
-    document.getElementById('cupon-activo').style.display='none';
-    document.getElementById('cupon-usado').style.display='none';
-    document.getElementById('cupon-vencido').style.display='none';
-    if (usado) {
-      document.getElementById('cupon-usado').style.display='block';
-    } else if (vencido) {
-      document.getElementById('cupon-vencido').style.display='block';
-    } else {
-      document.getElementById('cupon-activo').style.display='block';
-      document.getElementById('qc-cupon').style.display='flex';
-      document.getElementById('cupon-codigo').textContent = s.cuponBienvenida;
-      if (!cuponQRGenerated) {
-        document.getElementById('cupon-qr').innerHTML = '';
-        new QRCode(document.getElementById('cupon-qr'), {
-          text: 'CUPON|' + s.cuponBienvenida + '|' + s.uid,
-          width: 140, height: 140,
-          colorDark: '#006b5f', colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.M
-        });
-        cuponQRGenerated = true;
-      }
-      if (venc) {
-        const diasR = Math.ceil((venc - hoy)/(1000*60*60*24));
-        const pct = Math.max(0, Math.min(100,(diasR/30)*100));
-        document.getElementById('cupon-countdown').style.display='block';
-        document.getElementById('cupon-countdown-text').textContent =
-          diasR <= 1 ? '⚠️ ¡Vence hoy!' : `⏳ Quedan ${diasR} días para usarlo`;
-        document.getElementById('cupon-countdown-bar').style.width = pct+'%';
-      }
-    }
-  }).catch(() => {
-    // Si falla Firebase, mostramos el cupón igual
+    document.getElementById('cupon-usado').style.display='block';
+    document.getElementById('qc-cupon').style.display='none';
+  } else {
     document.getElementById('cupon-activo').style.display='block';
+    document.getElementById('cupon-usado').style.display='none';
     document.getElementById('qc-cupon').style.display='flex';
     document.getElementById('cupon-codigo').textContent = s.cuponBienvenida;
-  });
+    if (!cuponQRGenerated) {
+      document.getElementById('cupon-qr').innerHTML = '';
+      new QRCode(document.getElementById('cupon-qr'), {
+        text: 'CUPON|' + s.cuponBienvenida + '|' + s.uid,
+        width: 140, height: 140,
+        colorDark: '#006b5f', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      cuponQRGenerated = true;
+    }
+  }
 }
 
 
