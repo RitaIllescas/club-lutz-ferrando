@@ -850,7 +850,7 @@ window.confirmarCanje=async function(){
   if(!canjeSeleccionado||!currentSocio)return;
   const {pts,desc,valor}=canjeSeleccionado;
   if((currentSocio.pts||0)<pts){showToast('Puntos insuficientes');cerrarModal();return;}
-  await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js").then(async({getFirestore,doc,updateDoc,addDoc,collection,serverTimestamp,increment})=>{
+  const codigo='CANJE-'+Math.random().toString(36).substr(2,6).toUpperCase();.then(async({getFirestore,doc,updateDoc,addDoc,collection,serverTimestamp,increment})=>{
     const db2=getFirestore();
     await updateDoc(doc(db2,'socios',currentSocio.uid),{pts:increment(-pts)});
     await addDoc(collection(db2,'socios',currentSocio.uid,'movimientos'),{
@@ -1091,7 +1091,7 @@ window.guardarEdicion = async function() {
     err.classList.add('show'); return;
   }
   try {
-    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const { getFirestore, doc, updateDoc } = const codigo='CANJE-'+Math.random().toString(36).substr(2,6).toUpperCase();;
     const db2 = getFirestore();
     await updateDoc(doc(db2, 'socios', currentSocio.uid), { wsp, email });
     cerrarEditModal();
