@@ -333,12 +333,33 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
         <div id="cumple-countdown" style="font-size:11px;opacity:0.85;text-align:right"></div>
       </div>
     </div>
+    <!-- Banner cupón bienvenida -->
+    <div id="banner-bienvenida" style="display:none;margin:0 14px 12px;background:linear-gradient(135deg,#006b5f,#009180);border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden;cursor:pointer" onclick="goTo('cupon')">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.08)"></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:28px">🎁</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;margin-bottom:2px">Regalo de bienvenida</div>
+          <div style="font-size:20px;font-weight:700">$10.000 OFF</div>
+          <div style="font-size:11px;opacity:0.85;margin-top:2px" id="bienvenida-countdown-text">Válido por 30 días</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;opacity:0.7;margin-bottom:4px">Tocá para ver</div>
+          <div style="font-size:20px">→</div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="height:5px;background:rgba(255,255,255,0.2);border-radius:10px;overflow:hidden">
+          <div id="bienvenida-countdown-bar" style="height:100%;background:rgba(255,255,255,0.8);border-radius:10px;width:100%;transition:width 0.5s"></div>
+        </div>
+      </div>
+    </div>
     <div class="section-head">Accesos rápidos</div>
     <div class="quick-grid">
       <div class="quick-card" onclick="goTo('canje')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/></svg><span>Canjear puntos</span></div>
       <div class="quick-card" onclick="goTo('beneficios')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 12v10H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg><span>Beneficios</span></div>
       <div class="quick-card" onclick="goTo('historial')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Historial</span></div>
-      <div class="quick-card" id="qc-cupon" onclick="goTo('cupon')" style="display:none;border-color:#009180;background:#e0f5f2"><svg fill="none" stroke="#006b5f" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg><span style="color:#006b5f">🎁 $10.000 regalo</span></div>
+
     </div>
 
     <div class="section-head">Promos flash ⚡</div>
@@ -798,10 +819,31 @@ function renderHome(s,nivel,nivelLabel){
   if(document.getElementById('promos-container')) document.getElementById('promos-container').innerHTML='';
   renderFlashPromos();
   // show cupon card if active
-  const qcCupon=document.getElementById('qc-cupon');
-  if(qcCupon) qcCupon.style.display=(s.cuponBienvenida&&!s.cuponUsado)?'flex':'none';
   // Hide birthday banner if coupon was used
   if(s.cuponCumpleUsado) document.getElementById('banner-cumple').style.display='none';
+  // Show bienvenida banner
+  const bannerBienvenida = document.getElementById('banner-bienvenida');
+  if (bannerBienvenida && s.cuponBienvenida && !s.cuponUsado) {
+    // Get vencimiento from Firebase
+    getDoc(doc(db,'cupones',s.cuponBienvenida)).then(snap => {
+      if (!snap.exists()) return;
+      const c = snap.data();
+      if (c.usado) { bannerBienvenida.style.display='none'; return; }
+      const hoyB = new Date(); hoyB.setHours(0,0,0,0);
+      const vencB = c.vencimiento ? new Date(c.vencimiento) : null;
+      if (vencB && hoyB > vencB) { bannerBienvenida.style.display='none'; return; }
+      bannerBienvenida.style.display='block';
+      if (vencB) {
+        const diasR = Math.ceil((vencB - hoyB)/(1000*60*60*24));
+        const pct = Math.max(0,Math.min(100,(diasR/30)*100));
+        document.getElementById('bienvenida-countdown-text').textContent = 
+          diasR <= 1 ? '⚠️ ¡Vence hoy!' : `⏳ Quedan ${diasR} días para usarlo`;
+        document.getElementById('bienvenida-countdown-bar').style.width = pct+'%';
+      }
+    }).catch(()=>{ bannerBienvenida.style.display='block'; });
+  } else if (bannerBienvenida) {
+    bannerBienvenida.style.display='none';
+  }
   const discSvg='<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01"/></svg>';
   if(document.getElementById('promos-container')) document.getElementById('promos-container').innerHTML=PROMOS.filter(p=>p.niveles&&p.niveles.includes(nivel)).map(p=>`
     <div class="promo-card">
