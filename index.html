@@ -852,15 +852,23 @@ window.confirmarCanje=async function(){
   if((currentSocio.pts||0)<pts){showToast('Puntos insuficientes');cerrarModal();return;}
   const codigo='CANJE-'+Math.random().toString(36).substr(2,6).toUpperCase();
   const venc=new Date(); venc.setDate(venc.getDate()+3);
+  // Step 1: Save canje code
   try{
     await setDoc(doc(db,'canjes',codigo),{uid:currentSocio.uid,nombre:currentSocio.name,codigo,pts,desc,valor,usado:false,vencimiento:venc.toISOString().split('T')[0],createdAt:serverTimestamp()});
+  }catch(e){console.log('setDoc error:',e);}
+  // Step 2: Update points (non-blocking)
+  try{
     await updateDoc(doc(db,'socios',currentSocio.uid),{pts:increment(-pts)});
+  }catch(e){console.log('updateDoc error:',e);}
+  // Step 3: Add movement (non-blocking)
+  try{
     await addDoc(collection(db,'socios',currentSocio.uid,'movimientos'),{desc:'Canje: '+desc+' Codigo: '+codigo,pts:-pts,tipo:'canje',fecha:serverTimestamp()});
-    document.getElementById('modal-btns-confirm').style.display='none';
-    document.getElementById('modal-canje-codigo').style.display='flex';
-    document.getElementById('modal-codigo-val').textContent=codigo;
-    document.getElementById('modal-codigo-desc').textContent=valor+' - Valido hasta: '+venc.toLocaleDateString('es-AR');
-  }catch(e){showToast('Error al generar codigo.');}
+  }catch(e){console.log('addDoc error:',e);}
+  // Always show the code
+  document.getElementById('modal-btns-confirm').style.display='none';
+  document.getElementById('modal-canje-codigo').style.display='flex';
+  document.getElementById('modal-codigo-val').textContent=codigo;
+  document.getElementById('modal-codigo-desc').textContent=valor+' - Valido hasta: '+venc.toLocaleDateString('es-AR');
 };
 
 function renderBeneficios(nivel){
