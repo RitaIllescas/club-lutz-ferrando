@@ -335,7 +335,6 @@ html,body{height:100%;background:#e8edf2;font-family:var(--font);color:var(--tex
     </div>
     <div class="section-head">Accesos rápidos</div>
     <div class="quick-grid">
-      <div class="quick-card" onclick="goTo('carnet')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg><span>Mi carnet</span></div>
       <div class="quick-card" onclick="goTo('canje')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/></svg><span>Canjear puntos</span></div>
       <div class="quick-card" onclick="goTo('beneficios')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 12v10H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg><span>Beneficios</span></div>
       <div class="quick-card" onclick="goTo('historial')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Historial</span></div>
@@ -774,6 +773,8 @@ function renderHome(s,nivel,nivelLabel){
   // show cupon card if active
   const qcCupon=document.getElementById('qc-cupon');
   if(qcCupon) qcCupon.style.display=(s.cuponBienvenida&&!s.cuponUsado)?'flex':'none';
+  // Hide birthday banner if coupon was used
+  if(s.cuponCumpleUsado) document.getElementById('banner-cumple').style.display='none';
   const discSvg='<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01"/></svg>';
   if(document.getElementById('promos-container')) document.getElementById('promos-container').innerHTML=PROMOS.filter(p=>p.niveles&&p.niveles.includes(nivel)).map(p=>`
     <div class="promo-card">
