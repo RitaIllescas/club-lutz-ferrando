@@ -822,8 +822,9 @@ function renderHome(s,nivel,nivelLabel){
   document.getElementById('hero-urgency').textContent=getUrgency(s.pts,nivel);
   if(document.getElementById('promos-container')) document.getElementById('promos-container').innerHTML='';
   renderFlashPromos();
-  // Ocultar banner cumple por defecto; solo renderCuponCumple lo muestra si corresponde
+  // Ocultar banner cumple por defecto y rechequear
   document.getElementById('banner-cumple').style.display='none';
+  checkCumpleanos(s);
   // Show bienvenida banner
   const bannerBienvenida = document.getElementById('banner-bienvenida');
   if (bannerBienvenida && s.cuponBienvenida) {
