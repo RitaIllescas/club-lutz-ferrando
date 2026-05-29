@@ -858,12 +858,11 @@ window.confirmarCanje=async function(){
   }catch(e){console.log('setDoc error:',e);}
   // Step 2: Update points (non-blocking)
   try{
-    await updateDoc(doc(db,'socios',currentSocio.uid),{pts:increment(-pts)});
-  }catch(e){console.log('updateDoc error:',e);}
-  // Step 3: Add movement (non-blocking)
-  try{
-    await addDoc(collection(db,'socios',currentSocio.uid,'movimientos'),{desc:'Canje: '+desc+' Codigo: '+codigo,pts:-pts,tipo:'canje',fecha:serverTimestamp()});
-  }catch(e){console.log('addDoc error:',e);}
+    const {updateDoc:ud, doc:d2, increment:inc, getFirestore:gfs, addDoc:ad, collection:col, serverTimestamp:st} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const db2=gfs();
+    await ud(d2(db2,'socios',currentSocio.uid),{pts:inc(-pts)});
+    await ad(col(db2,'socios',currentSocio.uid,'movimientos'),{desc:'Canje: '+desc+' Codigo: '+codigo,pts:-pts,tipo:'canje',fecha:st()});
+  }catch(e){console.log('update error:',e);}
   // Always show the code
   document.getElementById('modal-btns-confirm').style.display='none';
   document.getElementById('modal-canje-codigo').style.display='flex';
