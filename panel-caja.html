@@ -370,6 +370,8 @@ onAuthStateChanged(auth,user=>{
 
 window.adminLogin=async function(){
   const email=document.getElementById('admin-email').value.trim();
+  const pass=window.adminLogin=async function(){
+  const email=document.getElementById('admin-email').value.trim();
   const pass=document.getElementById('admin-pass').value;
   const err=document.getElementById('admin-login-err');
   try{await signInWithEmailAndPassword(auth,email,pass);err.style.display='none';}
@@ -839,7 +841,9 @@ window.guardarEdicionAdmin = async function() {
 };
 
 
-document.getElementById('admin-pass').value;
+window.adminLogin=async function(){
+  const email=document.getElementById('admin-email').value.trim();
+  const pass=document.getElementById('admin-pass').value;
   const err=document.getElementById('admin-login-err');
   try{await signInWithEmailAndPassword(auth,email,pass);err.style.display='none';}
   catch(e){err.style.display='block';}
