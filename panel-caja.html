@@ -298,7 +298,7 @@ tr:hover td{background:#f9fafb;cursor:pointer;}
             <div style="font-size:12px;color:#7c3aed;margin-bottom:4px">Cupón de descuento activo:</div>
             <div style="font-size:14px;font-weight:700;color:#6d28d9;letter-spacing:1px" id="det-cumple-codigo">-</div>
             <div style="font-size:11px;color:#9ca3af;margin-top:3px" id="det-cumple-venc">-</div>
-            <div style="margin-top:8px;font-size:11px;color:#6d28d9;background:rgba(124,58,237,0.1);border-radius:6px;padding:6px">10% OFF · Validalo en la solapa "Validar cupón"</div>
+            <div style="margin-top:8px;font-size:11px;color:#6d28d9;background:rgba(124,58,237,0.1);border-radius:6px;padding:6px">10% OFF · Validalo en la solapa "Validar canje"</div>
           </div>
           <div id="det-cupon-bienvenida-box" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:14px;margin-bottom:10px">
             <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🎁 Cupón de bienvenida</div>
@@ -369,8 +369,6 @@ onAuthStateChanged(auth,user=>{
 });
 
 window.adminLogin=async function(){
-  const email=document.getElementById('admin-email').value.trim();
-  const pass=window.adminLogin=async function(){
   const email=document.getElementById('admin-email').value.trim();
   const pass=document.getElementById('admin-pass').value;
   const err=document.getElementById('admin-login-err');
@@ -459,475 +457,6 @@ window.verDetalle=async function(uid){
   document.getElementById('det-wsp-edit').value=s.wsp||'';
   document.getElementById('det-edit-ok').style.display='none';
   renderCuponBienvenidaPanel(s);
-  showDetTab('info');
-};
-
-window.volverLista=function(){
-  document.getElementById('socios-lista').style.display='block';
-  document.getElementById('socio-detalle').style.display='none';
-};
-
-window.showDetTab=async function(tab){
-  document.querySelectorAll('.detalle-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='info')||(i===1&&tab==='movimientos')));
-  document.getElementById('det-tab-info').style.display=tab==='info'?'block':'none';
-  document.getElementById('det-tab-movimientos').style.display=tab==='movimientos'?'block':'none';
-  if(tab==='movimientos'&&socioDetalle){
-    const q=query(collection(db,'socios',socioDetalle.uid,'movimientos'),orderBy('fecha','desc'));
-    const snap=await getDocs(q);
-    let rows='';
-    snap.forEach(d=>{
-      const m=d.data();
-      const fecha=m.fecha?.toDate?m.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Reciente';
-      const sucursal=m.sucursal?` · ${m.sucursal}`:'';
-      rows+=`<div class="mov-row">
-        <div class="mov-ico"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></div>
-        <div class="mov-info"><div class="title">${m.desc||'-'}</div><div class="sub">${fecha}${sucursal}</div></div>
-        <div class="mov-pts" style="color:${m.pts>0?'#16a34a':'#dc2626'}">${m.pts>0?'+':''}${m.pts} pts</div>
-      </div>`;
-    });
-    document.getElementById('det-movs-list').innerHTML=rows||'<div style="text-align:center;color:#9ca3af;padding:20px;font-size:12px">Sin movimientos</div>';
-  }
-};
-
-// BUSCAR SOCIO
-window.buscarSocio=function(){
-  clearTimeout(buscarTimeout);
-  buscarTimeout=setTimeout(async()=>{
-    const val=document.getElementById('buscar-input').value.trim();
-    const box=document.getElementById('buscar-socio-box');
-    const err=document.getElementById('buscar-error');
-    socioSeleccionado=null;
-    box.style.display='none';err.style.display='none';
-    document.getElementById('btn-confirmar').style.display='none';
-    document.getElementById('pts-preview-box').style.display='none';
-    document.getElementById('success-box').style.display='none';
-    if(val.length<3)return;
-    const isDNI=/^\d+$/.test(val);
-    let found=null;
-    if(isDNI){const q=query(collection(db,'socios'),where('dni','==',val));const snap=await getDocs(q);if(!snap.empty)found=snap.docs[0].data();}
-    else{found=todosSocios.find(s=>(s.name||'').toLowerCase().includes(val.toLowerCase()))||null;}
-    if(found){
-      socioSeleccionado=found;
-      const hoyB=new Date(); hoyB.setHours(0,0,0,0);
-      let fnacB=null;
-      if(found.fnac){
-        if(found.fnac.includes('-')){const p=found.fnac.split('-');fnacB=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));}
-        else if(found.fnac.includes('/')){const p=found.fnac.split('/');fnacB=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));}
-      }
-      const cumpleAnio=fnacB?new Date(hoyB.getFullYear(),fnacB.getMonth(),fnacB.getDate()):null;
-      const diffDiasB=cumpleAnio?Math.floor((hoyB-cumpleAnio)/(1000*60*60*24)):-1;
-      const esCumpleB=diffDiasB>=0&&diffDiasB<=30;
-      const diasRestB=esCumpleB?30-diffDiasB:0;
-      const codigoCumpleB='CUMPLE-'+(found.dni||'')+'-'+hoyB.getFullYear();
-      const cumpleBanner=esCumpleB?`
-        <div style="background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:10px;padding:12px;margin-top:10px;color:#fff">
-          <div style="font-size:16px;margin-bottom:4px">🎂 ${diffDiasB===0?'¡HOY ES SU CUMPLEAÑOS!':'Está en período de cumpleaños'}</div>
-          <div style="font-size:12px;opacity:0.9;margin-bottom:6px">${diffDiasB===0?'¡Felicitalo!':'Cumplió hace '+diffDiasB+' día'+(diffDiasB!==1?'s':'')}</div>
-          <div style="background:rgba(255,255,255,0.2);border-radius:8px;padding:8px;font-size:12px">
-            <div>🎁 Cupón activo: <strong>${codigoCumpleB}</strong></div>
-            <div style="margin-top:3px">10% OFF · ${diasRestB===0?'Vence hoy':'Quedan '+diasRestB+' día'+(diasRestB!==1?'s':'')}</div>
-          </div>
-        </div>`:'';
-      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(found.name)}</div><div><div class="socio-name">${found.name}</div><div class="socio-meta">${found.id} · ${(found.pts||0).toLocaleString('es-AR')} pts</div></div><span class="nivel-pill ${getNivelClass(found.pts||0).split(' ')[0]}">${getNivel(found.pts||0)}</span></div>${cumpleBanner}`;
-      box.style.display='block';calcularPuntos();
-    }else{err.style.display='block';}
-  },400);
-};
-
-window.calcularPuntos=function(){
-  const monto=parseInt(document.getElementById('monto-input').value)||0;
-  const pts=Math.floor(monto/1000);
-  const preview=document.getElementById('pts-preview-box');
-  const btn=document.getElementById('btn-confirmar');
-  if(!socioSeleccionado||pts<=0){preview.style.display='none';btn.style.display='none';return;}
-  document.getElementById('pts-preview-num').textContent='+'+pts;
-  preview.style.display='block';btn.style.display='block';
-};
-
-window.confirmarPuntos=async function(){
-  if(!socioSeleccionado)return;
-  const monto=parseInt(document.getElementById('monto-input').value)||0;
-  const pts=Math.floor(monto/1000);
-  if(pts<=0)return;
-  const nivelAntes=getNivel(socioSeleccionado.pts||0);
-  await updateDoc(doc(db,'socios',socioSeleccionado.uid),{pts:increment(pts)});
-  await addDoc(collection(db,'socios',socioSeleccionado.uid,'movimientos'),{
-    desc:'Compra en tienda — $'+monto.toLocaleString('es-AR'),
-    pts,tipo:'compra',fecha:serverTimestamp(),
-    sucursal:getSucursal(adminEmail)
-  });
-  const nuevoPts=(socioSeleccionado.pts||0)+pts;
-  const nivelDespues=getNivel(nuevoPts);
-  let msg=`+${pts} puntos sumados a ${socioSeleccionado.name}`;
-  let sub=`Total: ${nuevoPts.toLocaleString('es-AR')} pts`;
-  if(nivelAntes!==nivelDespues)sub+=` · ¡Subió a ${nivelDespues}! 🎉`;
-  document.getElementById('success-msg').textContent=msg;
-  document.getElementById('success-sub').textContent=sub;
-  document.getElementById('success-box').style.display='block';
-  document.getElementById('btn-confirmar').style.display='none';
-  document.getElementById('pts-preview-box').style.display='none';
-  document.getElementById('buscar-input').value='';
-  document.getElementById('monto-input').value='';
-  document.getElementById('buscar-socio-box').style.display='none';
-  socioSeleccionado=null;
-  await cargarSocios();
-};
-
-// QR
-window.procesarQR=async function(){
-  const val=document.getElementById('qr-input').value.trim();
-  const box=document.getElementById('qr-socio-box');
-  const err=document.getElementById('qr-error');
-  socioQR=null;box.style.display='none';err.style.display='none';
-  document.getElementById('qr-btn-confirmar').style.display='none';
-  document.getElementById('qr-pts-preview').style.display='none';
-  document.getElementById('qr-success-box').style.display='none';
-  if(!val.includes('|'))return;
-  const uid=val.split('|')[1];
-  try{
-    const snap=await getDoc(doc(db,'socios',uid));
-    if(snap.exists()){
-      socioQR=snap.data();
-      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(socioQR.name)}</div><div><div class="socio-name">${socioQR.name}</div><div class="socio-meta">${socioQR.id} · ${(socioQR.pts||0).toLocaleString('es-AR')} pts</div></div><span class="nivel-pill ${getNivelClass(socioQR.pts||0).split(' ')[0]}">${getNivel(socioQR.pts||0)}</span></div>`;
-      box.style.display='block';calcularPuntosQR();
-    }else{err.textContent='Socio no encontrado.';err.style.display='block';}
-  }catch(e){err.textContent='Error al leer QR.';err.style.display='block';}
-};
-
-window.calcularPuntosQR=function(){
-  const monto=parseInt(document.getElementById('qr-monto').value)||0;
-  const pts=Math.floor(monto/1000);
-  if(!socioQR||pts<=0){document.getElementById('qr-pts-preview').style.display='none';document.getElementById('qr-btn-confirmar').style.display='none';return;}
-  document.getElementById('qr-pts-num').textContent='+'+pts;
-  document.getElementById('qr-pts-preview').style.display='block';
-  document.getElementById('qr-btn-confirmar').style.display='block';
-};
-
-window.confirmarPuntosQR=async function(){
-  if(!socioQR)return;
-  const monto=parseInt(document.getElementById('qr-monto').value)||0;
-  const pts=Math.floor(monto/1000);
-  if(pts<=0)return;
-  const nivelAntes=getNivel(socioQR.pts||0);
-  await updateDoc(doc(db,'socios',socioQR.uid),{pts:increment(pts)});
-  await addDoc(collection(db,'socios',socioQR.uid,'movimientos'),{desc:'Compra en tienda — $'+monto.toLocaleString('es-AR'),pts,tipo:'compra',fecha:serverTimestamp(),sucursal:getSucursal(adminEmail)});
-  const nuevoPts=(socioQR.pts||0)+pts;
-  const nivelDespues=getNivel(nuevoPts);
-  let sub=`Total: ${nuevoPts.toLocaleString('es-AR')} pts`;
-  if(nivelAntes!==nivelDespues)sub+=` · ¡Subió a ${nivelDespues}! 🎉`;
-  document.getElementById('qr-success-msg').textContent=`+${pts} puntos sumados a ${socioQR.name}`;
-  document.getElementById('qr-success-sub').textContent=sub;
-  document.getElementById('qr-success-box').style.display='block';
-  document.getElementById('qr-btn-confirmar').style.display='none';
-  document.getElementById('qr-input').value='';document.getElementById('qr-monto').value='';
-  document.getElementById('qr-socio-box').style.display='none';
-  socioQR=null;await cargarSocios();
-};
-
-// CANJE
-let buscarCanjeTimeout;
-window.buscarSocioCanje=function(){
-  clearTimeout(buscarCanjeTimeout);
-  buscarCanjeTimeout=setTimeout(async()=>{
-    const dni=document.getElementById('canje-dni').value.trim().replace(/\D/g,'');
-    const box=document.getElementById('canje-socio-box');
-    const err=document.getElementById('canje-error');
-    socioCanje=null;box.style.display='none';err.style.display='none';
-    document.getElementById('btn-canje-confirmar').style.display='none';
-    document.getElementById('canje-preview').style.display='none';
-    document.getElementById('canje-success-box').style.display='none';
-    if(dni.length<7)return;
-    const q=query(collection(db,'socios'),where('dni','==',dni));
-    const snap=await getDocs(q);
-    if(!snap.empty){
-      socioCanje=snap.docs[0].data();
-      box.innerHTML=`<div class="socio-box-top"><div class="socio-avatar">${getInitials(socioCanje.name)}</div><div><div class="socio-name">${socioCanje.name}</div><div class="socio-meta">${socioCanje.id} · ${(socioCanje.pts||0).toLocaleString('es-AR')} pts disponibles</div></div><span class="nivel-pill ${getNivelClass(socioCanje.pts||0).split(' ')[0]}">${getNivel(socioCanje.pts||0)}</span></div>`;
-      box.style.display='block';calcularCanje();
-    }else{err.textContent='Socio no encontrado.';err.style.display='block';}
-  },400);
-};
-
-window.calcularCanje=function(){
-  const pts=parseInt(document.getElementById('canje-pts').value)||0;
-  if(!socioCanje||pts<=0){document.getElementById('canje-preview').style.display='none';document.getElementById('btn-canje-confirmar').style.display='none';return;}
-  const opcion=CANJES.slice().reverse().find(c=>c.pts<=pts)||null;
-  const desc=opcion?opcion.desc:'Canje personalizado';
-  document.getElementById('canje-preview-pts').textContent='-'+pts.toLocaleString('es-AR')+' pts';
-  document.getElementById('canje-preview-desc').textContent=desc;
-  document.getElementById('canje-preview').style.display='block';
-  document.getElementById('btn-canje-confirmar').style.display=(socioCanje.pts||0)>=pts?'block':'none';
-  if((socioCanje.pts||0)<pts){const e=document.getElementById('canje-error');e.textContent='Puntos insuficientes (tiene '+(socioCanje.pts||0)+')';e.style.display='block';}
-  else{document.getElementById('canje-error').style.display='none';}
-};
-
-window.confirmarCanje=async function(){
-  if(!socioCanje)return;
-  const pts=parseInt(document.getElementById('canje-pts').value)||0;
-  if(pts<=0||(socioCanje.pts||0)<pts)return;
-  const opcion=CANJES.slice().reverse().find(c=>c.pts<=pts)||{desc:'Canje'};
-  await updateDoc(doc(db,'socios',socioCanje.uid),{pts:increment(-pts)});
-  await addDoc(collection(db,'socios',socioCanje.uid,'movimientos'),{
-    desc:'Canje: '+opcion.desc,pts:-pts,tipo:'canje',fecha:serverTimestamp(),sucursal:getSucursal(adminEmail)
-  });
-  document.getElementById('canje-success-msg').textContent=`Canje registrado: -${pts} pts a ${socioCanje.name}`;
-  document.getElementById('canje-success-sub').textContent=`Descuento: ${opcion.desc} · Saldo restante: ${((socioCanje.pts||0)-pts).toLocaleString('es-AR')} pts`;
-  document.getElementById('canje-success-box').style.display='block';
-  document.getElementById('btn-canje-confirmar').style.display='none';
-  document.getElementById('canje-preview').style.display='none';
-  document.getElementById('canje-dni').value='';document.getElementById('canje-pts').value='';
-  document.getElementById('canje-socio-box').style.display='none';
-  socioCanje=null;await cargarSocios();
-};
-
-window.showTab=function(name){
-  ['cargar','socios','canjes','flash'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.style.display=t===name?'block':'none';});
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['cargar','socios','canjes','flash'][i]===name));
-  if(name==='socios')cargarSocios();
-  if(name==='flash')cargarFlashLista();
-};
-
-
-
-// ---- VALIDAR CANJE ----
-let canjeEncontrado = null;
-
-window.buscarCanje = async function() {
-  const codigo = document.getElementById('canje-codigo-input').value.trim().toUpperCase();
-  const result = document.getElementById('canje-result');
-  const err = document.getElementById('canje-error-result');
-  const success = document.getElementById('canje-success-result');
-  canjeEncontrado = null;
-  result.style.display='none'; err.style.display='none'; success.style.display='none';
-  document.getElementById('btn-usar-canje').style.display='none';
-  if (codigo.length < 8) return;
-  try {
-    const snap = await getDoc(doc(db,'canjes',codigo));
-    if (!snap.exists()) { err.textContent='Código no encontrado.'; err.style.display='block'; return; }
-    canjeEncontrado = snap.data();
-    canjeEncontrado.codigo = codigo;
-    result.style.display='block';
-    document.getElementById('canje-result-avatar').textContent = getInitials(canjeEncontrado.nombre||'-');
-    document.getElementById('canje-result-nombre').textContent = canjeEncontrado.nombre||'-';
-    if (canjeEncontrado.usado) {
-      result.style.background='#f3f4f6';
-      document.getElementById('canje-result-meta').textContent = '⚠️ Este canje ya fue utilizado';
-      document.getElementById('canje-descuento-box').style.background='#e5e7eb';
-      document.getElementById('canje-descuento-box').style.color='#9ca3af';
-      document.getElementById('canje-result-desc').textContent = canjeEncontrado.desc||'-';
-      document.getElementById('canje-result-venc').textContent = 'CANJE YA USADO';
-    } else {
-      const venc = canjeEncontrado.vencimiento ? new Date(canjeEncontrado.vencimiento) : null;
-      const vencido = venc && new Date() > venc;
-      if (vencido) {
-        result.style.background='#fef2f2';
-        document.getElementById('canje-result-meta').textContent = '⚠️ Este canje está vencido';
-        document.getElementById('canje-descuento-box').style.background='#fef2f2';
-        document.getElementById('canje-result-desc').textContent = canjeEncontrado.desc||'-';
-        document.getElementById('canje-result-venc').textContent = 'VENCIDO';
-      } else {
-        result.style.background='#f0fdf4';
-        document.getElementById('canje-result-meta').textContent = '✓ Canje válido · Listo para aplicar';
-        document.getElementById('canje-descuento-box').style.background='#dcfce7';
-        document.getElementById('canje-descuento-box').style.color='#15803d';
-        document.getElementById('canje-result-desc').textContent = canjeEncontrado.desc||'-';
-        document.getElementById('canje-result-venc').textContent = venc ? 'Válido hasta: '+venc.toLocaleDateString('es-AR') : '';
-        document.getElementById('btn-usar-canje').style.display='block';
-      }
-    }
-  } catch(e) { err.textContent='Error al buscar.'; err.style.display='block'; }
-};
-
-window.usarCanje = async function() {
-  if (!canjeEncontrado || canjeEncontrado.usado) return;
-  await updateDoc(doc(db,'canjes',canjeEncontrado.codigo), {
-    usado:true, usadoEn:serverTimestamp(), usadoEnSucursal:getSucursal(adminEmail)
-  });
-  document.getElementById('btn-usar-canje').style.display='none';
-  document.getElementById('canje-result').style.display='none';
-  document.getElementById('canje-success-result').style.display='block';
-  document.getElementById('canje-success-result-msg').textContent = 'Canje aplicado: '+canjeEncontrado.desc+' para '+canjeEncontrado.nombre;
-  document.getElementById('canje-codigo-input').value='';
-  canjeEncontrado=null;
-};
-
-// ---- PROMOS FLASH ----
-window.cargarFlash = async function() {
-  const titulo = document.getElementById('flash-titulo').value.trim();
-  const sub = document.getElementById('flash-sub').value.trim();
-  const badge = document.getElementById('flash-badge').value.trim();
-  const imagen = document.getElementById('flash-imagen').value.trim();
-  const venc = document.getElementById('flash-venc').value;
-  if (!titulo) return;
-  await addDoc(collection(db,'flash_promos'), {
-    titulo, sub, badge, imagen, vencimiento:venc||null,
-    activa:true, createdAt:serverTimestamp()
-  });
-  document.getElementById('flash-titulo').value='';
-  document.getElementById('flash-sub').value='';
-  document.getElementById('flash-badge').value='';
-  document.getElementById('flash-imagen').value='';
-  document.getElementById('flash-venc').value='';
-  document.getElementById('flash-success').style.display='block';
-  setTimeout(()=>document.getElementById('flash-success').style.display='none',3000);
-  cargarFlashLista();
-};
-
-async function cargarFlashLista() {
-  const snap = await getDocs(collection(db,'flash_promos'));
-  let rows='';
-  snap.forEach(d => {
-    const p=d.data(); const id=d.id;
-    rows+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1"><div style="font-size:13px;font-weight:700">${p.titulo}</div><div style="font-size:11px;color:var(--text-muted)">${p.sub||''} ${p.vencimiento?'· Hasta '+p.vencimiento:''}</div></div>
-      <span style="background:${p.activa?'#dcfce7':'#f3f4f6'};color:${p.activa?'#15803d':'#9ca3af'};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">${p.activa?'Activa':'Inactiva'}</span>
-      <button onclick="toggleFlash('${id}',${!p.activa})" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11px;cursor:pointer">${p.activa?'Desactivar':'Activar'}</button>
-    </div>`;
-  });
-  document.getElementById('flash-lista').innerHTML=rows||'<div style="font-size:12px;color:var(--text-muted);padding:10px">Sin promos cargadas</div>';
-}
-
-window.toggleFlash = async function(id, estado) {
-  await updateDoc(doc(db,'flash_promos',id),{activa:estado});
-  cargarFlashLista();
-};
-
-// ---- CUPON BIENVENIDA PANEL ----
-async function renderCuponBienvenidaPanel(s) {
-  const activo = document.getElementById('det-cupon-bienvenida-activo');
-  const generar = document.getElementById('det-cupon-bienvenida-generar');
-  activo.style.display = 'none';
-  generar.style.display = 'none';
-  document.getElementById('det-cupon-bienvenida-ok').style.display = 'none';
-  if (!s.cuponBienvenida) { generar.style.display = 'block'; return; }
-  try {
-    const snap = await getDoc(doc(db, 'cupones', s.cuponBienvenida));
-    if (!snap.exists()) { generar.style.display = 'block'; return; }
-    const c = snap.data();
-    activo.style.display = 'block';
-    document.getElementById('det-cupon-bienvenida-codigo').textContent = s.cuponBienvenida;
-    document.getElementById('det-cupon-bienvenida-estado').textContent = c.usado ? '✓ Ya utilizado' : 'Válido · Sin usar';
-  } catch(e) { generar.style.display = 'block'; }
-}
-
-window.generarCuponBienvenida = async function() {
-  if (!socioDetalle) return;
-  const codigo = 'CLF-' + Math.random().toString(36).substr(2,8).toUpperCase();
-  const venc = new Date(); venc.setDate(venc.getDate() + 30);
-  await setDoc(doc(db, 'cupones', codigo), {
-    uid: socioDetalle.uid,
-    nombre: socioDetalle.name || socioDetalle.nombre,
-    codigo, descuento: '$10.000',
-    desc: '$10.000 de descuento en cualquier producto',
-    valor: 10000, tipo: 'bienvenida', usado: false,
-    vencimiento: venc.toISOString().split('T')[0],
-    createdAt: serverTimestamp()
-  });
-  await updateDoc(doc(db, 'socios', socioDetalle.uid), { cuponBienvenida: codigo });
-  socioDetalle.cuponBienvenida = codigo;
-  document.getElementById('det-cupon-bienvenida-ok').style.display = 'inline';
-  await renderCuponBienvenidaPanel(socioDetalle);
-};
-
-window.guardarEdicionAdmin = async function() {
-  if (!socioDetalle) return;
-  const email = document.getElementById('det-email-edit').value.trim();
-  const wsp = document.getElementById('det-wsp-edit').value.trim();
-  if (!email || !wsp) return;
-  await updateDoc(doc(db, 'socios', socioDetalle.uid), { email, wsp });
-  document.getElementById('det-edit-ok').style.display = 'inline';
-  setTimeout(() => document.getElementById('det-edit-ok').style.display = 'none', 3000);
-  await cargarSocios();
-};
-
-
-window.adminLogin=async function(){
-  const email=document.getElementById('admin-email').value.trim();
-  const pass=document.getElementById('admin-pass').value;
-  const err=document.getElementById('admin-login-err');
-  try{await signInWithEmailAndPassword(auth,email,pass);err.style.display='none';}
-  catch(e){err.style.display='block';}
-};
-window.adminLogout=async function(){await signOut(auth);};
-
-async function cargarSocios(){
-  const snap=await getDocs(collection(db,'socios'));
-  todosSocios=[];
-  snap.forEach(d=>todosSocios.push(d.data()));
-  renderStats();
-  renderTabla(todosSocios);
-}
-
-function renderStats(){
-  document.getElementById('stat-total').textContent=todosSocios.length;
-  document.getElementById('stat-basico').textContent=todosSocios.filter(s=>getNivel(s.pts||0)==='Básico').length;
-  document.getElementById('stat-gold').textContent=todosSocios.filter(s=>getNivel(s.pts||0)==='Gold').length;
-  document.getElementById('stat-black').textContent=todosSocios.filter(s=>getNivel(s.pts||0)==='Black').length;
-}
-
-function renderTabla(socios){
-  const tbody=document.getElementById('socios-tbody');
-  if(!socios.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px">Sin socios</td></tr>';return;}
-  const hoyT=new Date();
-  tbody.innerHTML=socios.map(s=>{
-    const fnacT=s.fnac?new Date(s.fnac):null;
-    const esCumpleT=fnacT&&fnacT.getDate()===hoyT.getDate()&&fnacT.getMonth()===hoyT.getMonth();
-    const rowStyle=esCumpleT?'background:#f5f3ff;':''
-    const cumpleIcon=esCumpleT?' 🎂':'';
-    return `<tr onclick="verDetalle('${s.uid}')" style="${rowStyle}">
-    <td><strong>${s.id||'-'}</strong></td>
-    <td>${s.name||'-'}${cumpleIcon}</td>
-    <td>${s.dni||'-'}</td>
-    <td>${s.wsp||'-'}</td>
-    <td><span class="badge ${getNivelClass(s.pts||0)}">${getNivel(s.pts||0)}</span></td>
-    <td><strong>${(s.pts||0).toLocaleString('es-AR')}</strong></td>
-    <td>${PROD_LABELS[s.producto]||s.producto||'-'}</td>
-    <td>${s.joined||'-'}</td>
-  </tr>`;
-  }).join('');
-}
-
-window.filtrarTabla=function(){
-  const q=document.getElementById('tabla-search').value.toLowerCase();
-  renderTabla(todosSocios.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.dni||'').includes(q)||(s.wsp||'').includes(q)));
-};
-
-// VER DETALLE
-window.verDetalle=async function(uid){
-  socioDetalle=todosSocios.find(s=>s.uid===uid);
-  if(!socioDetalle)return;
-  const s=socioDetalle;
-  document.getElementById('socios-lista').style.display='none';
-  document.getElementById('socio-detalle').style.display='block';
-  document.getElementById('det-avatar').textContent=getInitials(s.name);
-  document.getElementById('det-name').textContent=s.name||'-';
-  // Check birthday
-  const hoyD=new Date(), fnacD=s.fnac?new Date(s.fnac):null;
-  const esCumple=fnacD&&fnacD.getDate()===hoyD.getDate()&&fnacD.getMonth()===hoyD.getMonth();
-  const cumpleBadge=esCumple?'  🎂 ¡HOY ES SU CUMPLEAÑOS!':'';
-  document.getElementById('det-meta').textContent=(s.id||'-')+' · '+(s.pts||0).toLocaleString('es-AR')+' puntos'+cumpleBadge;
-  // Show birthday coupon info
-  const cumpleBox=document.getElementById('det-cumple-box');
-  if(esCumple){
-    cumpleBox.style.display='block';
-    const anio=hoyD.getFullYear();
-    const codigoCumple='CUMPLE-'+(s.dni||'')+'-'+anio;
-    document.getElementById('det-cumple-codigo').textContent=codigoCumple;
-    const venc=new Date(hoyD); venc.setDate(venc.getDate()+30);
-    document.getElementById('det-cumple-venc').textContent='Válido hasta: '+venc.toLocaleDateString('es-AR');
-  } else { cumpleBox.style.display='none'; }
-  document.getElementById('det-nivel-pill').textContent=getNivel(s.pts||0);
-  document.getElementById('det-nivel-pill').className='nivel-pill '+getNivelClass(s.pts||0).split(' ')[0];
-  document.getElementById('det-id').textContent=s.id||'-';
-  document.getElementById('det-dni').textContent=s.dni||'-';
-  document.getElementById('det-email').textContent=s.email||'-';
-  document.getElementById('det-wsp').textContent=s.wsp||'-';
-  document.getElementById('det-fnac').textContent=s.fnac||'-';
-  document.getElementById('det-joined').textContent=s.joined||'-';
-  document.getElementById('det-pts').textContent=(s.pts||0).toLocaleString('es-AR')+' pts';
-  document.getElementById('det-producto').textContent=PROD_LABELS[s.producto]||s.producto||'-';
-  document.getElementById('det-email-edit').value=s.email||'';
-  document.getElementById('det-wsp-edit').value=s.wsp||'';
-  document.getElementById('det-edit-ok').style.display='none';
   showDetTab('info');
 };
 
@@ -1273,66 +802,41 @@ window.guardarEdicionAdmin = async function() {
 };
 
 
-// ---- CUPONES ----
-let cuponEncontrado = null;
-
-window.buscarCupon = async function() {
-  const val = document.getElementById('cupon-input').value.trim().toUpperCase();
-  const resultBox = document.getElementById('cupon-result-box');
-  const errBox = document.getElementById('cupon-error-box');
-  const successBox = document.getElementById('cupon-success-box');
-  cuponEncontrado = null;
-  resultBox.style.display='none'; errBox.style.display='none'; successBox.style.display='none';
-  document.getElementById('btn-usar-cupon').style.display='none';
-
-  // Extract code from QR content (CUPON|CODE|uid) or direct code
-  let codigo = val;
-  if (val.startsWith('CUPON|')) {
-    codigo = val.split('|')[1];
-    document.getElementById('cupon-input').value = codigo;
-  }
-  if (codigo.length < 8) return;
-
+// ---- CUPON BIENVENIDA PANEL ----
+async function renderCuponBienvenidaPanel(s) {
+  const activo = document.getElementById('det-cupon-bienvenida-activo');
+  const generar = document.getElementById('det-cupon-bienvenida-generar');
+  activo.style.display = 'none';
+  generar.style.display = 'none';
+  document.getElementById('det-cupon-bienvenida-ok').style.display = 'none';
+  if (!s.cuponBienvenida) { generar.style.display = 'block'; return; }
   try {
-    const snap = await getDoc(doc(db, 'cupones', codigo));
-    if (!snap.exists()) { errBox.textContent='Cupón no encontrado.'; errBox.style.display='block'; return; }
-    cuponEncontrado = snap.data();
-    cuponEncontrado.codigo = codigo;
+    const snap = await getDoc(doc(db, 'cupones', s.cuponBienvenida));
+    if (!snap.exists()) { generar.style.display = 'block'; return; }
+    const c = snap.data();
+    activo.style.display = 'block';
+    document.getElementById('det-cupon-bienvenida-codigo').textContent = s.cuponBienvenida;
+    document.getElementById('det-cupon-bienvenida-estado').textContent = c.usado ? '✓ Ya utilizado' : 'Válido · Sin usar';
+  } catch(e) { generar.style.display = 'block'; }
+}
 
-    // Show result
-    resultBox.style.display='block';
-    document.getElementById('cupon-avatar').textContent = getInitials(cuponEncontrado.nombre||'-');
-    document.getElementById('cupon-nombre').textContent = cuponEncontrado.nombre||'-';
-
-    if (cuponEncontrado.usado) {
-      resultBox.style.background='#f3f4f6';
-      document.getElementById('cupon-meta').textContent = '⚠️ Este cupón ya fue utilizado';
-      document.getElementById('cupon-descuento-box').style.background='#e5e7eb';
-      document.getElementById('cupon-descuento-box').style.color='#9ca3af';
-      document.getElementById('cupon-descuento-val').textContent = cuponEncontrado.descuento||'10%';
-      document.getElementById('cupon-descuento-desc').textContent = 'CUPÓN YA USADO';
-      document.getElementById('btn-usar-cupon').style.display='none';
-    } else {
-      resultBox.style.background='#f0fdf4';
-      document.getElementById('cupon-meta').textContent = '✓ Cupón válido · Listo para usar';
-      document.getElementById('cupon-descuento-box').style.background='#dcfce7';
-      document.getElementById('cupon-descuento-box').style.color='#15803d';
-      document.getElementById('cupon-descuento-val').textContent = cuponEncontrado.descuento||'10%';
-      document.getElementById('cupon-descuento-desc').textContent = cuponEncontrado.desc||'Descuento en compra';
-      document.getElementById('btn-usar-cupon').style.display='block';
-    }
-  } catch(e) { errBox.textContent='Error al buscar cupón.'; errBox.style.display='block'; }
-};
-
-window.usarCupon = async function() {
-  if (!cuponEncontrado || cuponEncontrado.usado) return;
-  await updateDoc(doc(db,'cupones',cuponEncontrado.codigo), { usado:true, usadoEn:serverTimestamp(), usadoEnSucursal:getSucursal(adminEmail) });
-  await updateDoc(doc(db,'socios',cuponEncontrado.uid), { cuponUsado:true });
-  document.getElementById('btn-usar-cupon').style.display='none';
-  document.getElementById('cupon-result-box').style.display='none';
-  document.getElementById('cupon-success-box').style.display='block';
-  document.getElementById('cupon-input').value='';
-  cuponEncontrado=null;
+window.generarCuponBienvenida = async function() {
+  if (!socioDetalle) return;
+  const codigo = 'CLF-' + Math.random().toString(36).substr(2,8).toUpperCase();
+  const venc = new Date(); venc.setDate(venc.getDate() + 30);
+  await setDoc(doc(db, 'cupones', codigo), {
+    uid: socioDetalle.uid,
+    nombre: socioDetalle.name || socioDetalle.nombre,
+    codigo, descuento: '$10.000',
+    desc: '$10.000 de descuento en cualquier producto',
+    valor: 10000, tipo: 'bienvenida', usado: false,
+    vencimiento: venc.toISOString().split('T')[0],
+    createdAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, 'socios', socioDetalle.uid), { cuponBienvenida: codigo });
+  socioDetalle.cuponBienvenida = codigo;
+  document.getElementById('det-cupon-bienvenida-ok').style.display = 'inline';
+  await renderCuponBienvenidaPanel(socioDetalle);
 };
 
 document.getElementById('admin-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.adminLogin();});
